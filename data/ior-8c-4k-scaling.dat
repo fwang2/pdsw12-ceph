@@ -1,0 +1,18 @@
+bsize, 	np, 	tsize, 	bw, 	mode
+8g, 	1, 	4k, 	548.41, 	read
+8g, 	1, 	4k, 	660.06, 	write
+8g, 	2, 	4k, 	17.4, 	    read
+8g, 	2, 	4k, 	1374.94, 	write
+8g, 	3, 	4k, 	26.80, 	    read
+8g, 	3, 	4k, 	1923.88, 	write
+8g, 	4, 	4k, 	35.98, 	    read
+8g, 	4, 	4k, 	1721.11, 	write
+8g, 	5, 	4k, 	45.16, 	    read
+8g, 	5, 	4k, 	1943.44, 	write
+8g, 	6, 	4k, 	54.38, 	    read
+8g, 	6, 	4k, 	2018.10,    write
+8g,	    7, 	4k, 	64.41,		read
+8g,	    7, 	4k, 	2164.98,	write
+8g,	    8, 	4k, 	72.47, 	    read
+8g,	    8, 	4k, 	2216.33,    write
+

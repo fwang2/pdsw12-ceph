@@ -1,0 +1,12 @@
+node num, client num, process num, osd num, bw, mode
+1, 1, 4, 3, 529.933, read
+1, 1, 4, 5, 898.428, read 
+1, 1, 4, 7, 1223.42, read
+1, 1, 4, 9, 1519.74, read
+1, 1, 4, 11, 1654.84, read
+1, 1, 4, 3, 512.495, write
+1, 1, 4, 5, 780.602, write
+1, 1, 4, 7, 1160.11, write
+1, 1, 4, 9, 1376.85, write
+1, 1, 4, 11, 1410.34, write
+

@@ -1,0 +1,15 @@
+num.dev, mode, bw.max
+1, seq.rd, 1081
+2, seq.rd, 1695
+3, seq.rd, 2544
+4, seq.rd, 2986
+5, seq.rd, 3132
+6, seq.rd, 3167
+1, seq.wr, 573
+2, seq.wr, 772
+3, seq.wr, 934
+4, seq.wr, 1547
+5, seq.wr, 1526
+6, seq.wr, 1468
+
+
