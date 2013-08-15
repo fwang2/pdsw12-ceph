@@ -1,3 +1,4 @@
+require("ggplot2")
 
 plot_xfs <- function(file) {
     cat("Processing: ", file, "\n")
@@ -12,7 +13,7 @@ plot_xfs <- function(file) {
     xmax=as.integer(max(df$osd.num))
 
     quartz(type="pdf", file="rados_osd.pdf")
-    theme_set(theme_bw(base_family="Lucida Grande"))
+    theme_set(theme_bw(base_family="Lucida Grande", base_size=18))
     g = qplot(osd.num, bw,
             data=df,
             shape=factor(df$mode),
@@ -21,14 +22,18 @@ plot_xfs <- function(file) {
             # geom=c("point", "smooth"),
             ylab="Max (MB/s)\n",
             xlab="\nNum of OSDs",
-            main="Scaling OSD on a single server single client")
+            main="Single server, single client")
+    
     g = g + scale_shape_discrete(name="IO mode")
     g = g + scale_color_discrete(name="IO mode")
     g = g + geom_point(size=3.5)
     g = g + geom_line(size=1.5)
+    
+    # will (not) place lengend on the top
     g = g + opts(legend.position="top")
-    g = g + scale_y_continuous(breaks=seq(ymin, ymax,
-                    as.integer((ymax-ymin)/5)))
+    
+    #g = g + scale_y_continuous(breaks=seq(ymin, ymax,
+    #                as.integer((ymax-ymin)/5)))
     g = g + scale_x_continuous(breaks=seq(xmin, xmax))
 
     g = g + opts(panel.grid.major = theme_line(color="grey80", size = 0.7, linetype = "dashed"))

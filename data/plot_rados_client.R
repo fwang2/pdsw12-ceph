@@ -1,3 +1,4 @@
+require("ggplot2")
 
 plot_xfs <- function(file) {
     cat("Processing: ", file, "\n")
@@ -12,7 +13,7 @@ plot_xfs <- function(file) {
     xmax=as.integer(max(df$client.num))
 
     quartz(type="pdf", file="rados_client.pdf")
-    theme_set(theme_bw(base_family="Lucida Grande"))
+    theme_set(theme_bw(base_family="Lucida Grande", base_size=18))
     g = qplot(client.num, bw,
             data=df,
             shape=factor(df$mode),

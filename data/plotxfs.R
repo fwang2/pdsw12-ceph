@@ -1,3 +1,4 @@
+require("ggplot2")
 
 plot_xfs <- function(file) {
     cat("Processing: ", file, "\n")

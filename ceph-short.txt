@@ -1,0 +1,55 @@
+\begin{Verbatim}[fontsize=\small, numbers=left]
+[global] 
+        # Disable authentication (for testing)
+        auth service required = none 
+        auth cluster required = none 
+        auth client required = none
+
+        # Disable syslog logging
+        log to syslog = false 
+
+        # use leveldb for certain xattr attributes.  Needed for EXT4.
+        filestore xattr use omap = true
+
+        # Use aio for the journal.  Enabled by default in recent versions of Ceph.
+        journal aio = true 
+
+        # Disable crc checksums for the messenger.  Small Gain, may not be 
+        # necessary with SSE4 CRC32.
+        ms nocrc = true 
+
+        # set the tcp rcvbuf size.  Workaround for Kernel TCP autotuning issues.
+        ms tcp rcvbuf = 262144 
+        # Implemented to deal with thread timeouts.  May no longer be necessary.
+        osd_op_thread_timeout = 30 
+        filestore_op_thread_timeout = 600 
+
+        # Use the Infiniband network
+        public network = 10.37.0.0/16 
+        cluster network = 10.37.0.0/16 
+
+        # export logs to a specific home directory.
+        log file = /chexport/users/nhm/ceph/$name.log 
+
+[mon] 
+        mon data = /tmp/mon.$id 
+
+[mon.a] 
+        mon addr = 10.37.248.43:6789 
+        host = spoon41 
+
+[mds.a] 
+        host = spoon41 
+
+[osd] 
+        osd journal size = 10240 
+
+[osd.0] 
+        host = tick-oss1 
+        osd data = /tmp/mnt/osd-device-0-data 
+        osd journal = /dev/mapper/tick-oss1-sata-l11 
+
+\end{Verbatim}
+
+... Abbreviated for saving space
+

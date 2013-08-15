@@ -1,3 +1,4 @@
+require("ggplot2")
 
 plot_xdd <- function(f, m) {
     cat("Processing: ", f, m , "\n")
@@ -12,7 +13,7 @@ plot_xdd <- function(f, m) {
     xmax=as.integer(max(df$dev.num))
 
     quartz(type="pdf", file=paste("xdd-", m, ".pdf", sep=""))
-    theme_set(theme_bw(base_family="Lucida Grande"))
+    theme_set(theme_bw(base_family="Lucida Grande", base_size=18))
     g = qplot(dev.num, bw,
             data=df,
             shape=factor(df$qd),

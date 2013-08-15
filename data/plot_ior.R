@@ -1,3 +1,4 @@
+require("ggplot2")
 
 plot_xfs <- function(file) {
     cat("Processing: ", file, "\n")
@@ -14,7 +15,7 @@ plot_xfs <- function(file) {
     xmax=as.integer(max(df$np))
 
     quartz(type="pdf", file=paste("ior_", tsize, ".pdf", sep =""))
-    theme_set(theme_bw(base_family="Lucida Grande"))
+    theme_set(theme_bw(base_family="Lucida Grande", base_size=18))
     g = qplot(np, bw,
             data=df,
             shape=factor(df$mode),
@@ -23,7 +24,7 @@ plot_xfs <- function(file) {
             # geom=c("point", "smooth"),
             ylab="Max (MB/s)\n",
             xlab="\nNum of clients",
-            main=paste("4 OSS servers, blocksize=8GB, transfer size=", tsize,sep=""))
+            main=paste("IOR: transfer size=", tsize,sep=""))
     g = g + scale_shape_discrete(name="IO mode")
     g = g + scale_color_discrete(name="IO mode")
     g = g + geom_point(size=3)

@@ -1,0 +1,16 @@
+\begin{Verbatim}
+btrfs mkfs options: -l 16k -n 16k
+btrfs mount options: -o noatime
+
+ext4 mkfs options: <none>
+ext4 mount options: -o noatime, user_xattr
+
+xfs mkfs options: -f -i size=2048
+xfs mount options: -o inode64,noatime
+
+Note: since this testing was preformed, two additional XFS options have been
+shown to improve performance on some system: 
+
+Additional xfs mkfs option: -n size=64k
+Additional XFS mount option: -o logbsize=256k
+\end{Verbatim}
