@@ -52,6 +52,17 @@ Brad Settlemyer, Scotty Atchley, Jason Hill, Mark Nelson}
 
 \input{cover}
 
+\pagebreak
+\thispagestyle{empty}
+\tableofcontents
+
+\pagebreak
+\thispagestyle{empty}
+\listoffigures
+
+\clearpage
+\pagenumbering{arabic}
+
 %\maketitle
 %\authorrunning{}
 %\titlerunning{}
@@ -560,10 +571,11 @@ servers.
 \subsection{Disabling Client CRC32}
 
 ORNL at this point was able to both make more client nodes available and also
-install a profiling tool called \textbb{perf} that is extremely useful for
-profiling both kernel and user space code.  Profiling with perf showed high CPU
-utilization on the client due to crc32c processing in the Ceph kernel client. 
-Luckily crc32 checksums can be disabled by changing the CephFS mount options:
+install a profiling tool called \verb!perf! that is extremely useful for
+profiling both kernel and user space code.  Profiling with \verb!perf! showed
+high CPU utilization on the client due to crc32c processing in the Ceph kernel
+client.  Luckily crc32 checksums can be disabled by changing the CephFS mount
+options:
 
 \begin{Verbatim}
 mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o name=admin,nocrc
@@ -763,6 +775,7 @@ This is preliminary observations from mostly performance perspective:
 \end{itemize}
 
 \section*{Appendix A - CephFS Final Mount Command}
+\addcontentsline{toc}{section}{Appendix A - CephFS Final Mount}
 
 \begin{Verbatim}
 mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
@@ -771,10 +784,12 @@ mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
 
 
 \section*{Appendix B - OSD File System Options}
+\addcontentsline{toc}{section}{Appendix B - OSD File System Options}
 
 \input{osd_fs.txt}
 
 \section*{Appendix C - CRUSH Map}
+\addcontentsline{toc}{section}{Appendix C - CRUSH map}
 
 This crush map is just an example of full OSD mapping. As we create and
 re-create different testbed with different OSD configurations, the map will
@@ -784,7 +799,7 @@ change accordingly.
 
 
 \section*{Appendix D - Final ceph.conf}
-
+\addcontentsline{toc}{section}{Appendix D - Final ceph.conf}
 
 \input{ceph-short.txt}
 
