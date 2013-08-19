@@ -1,4 +1,13 @@
 
+## For ORNL tech report: 
+
+   git checkout techreport
+
+## For workshop version
+
+   git checkout workshop
+
+
 ## Pre-requisite:
 
 

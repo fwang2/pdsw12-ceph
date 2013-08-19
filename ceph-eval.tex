@@ -383,6 +383,8 @@ transfer size is concerned: 4 KB and 4 MB, using the same number of OSS servers
 %% SCOTT - figures 4-7 do not seem to use a base of 0 for the Y axis. Is this common?
 %% SCOTT - Can figures 6-7 have the same Y axis with either base 2 or base 10 values?
 
+%% FEIYI: 6, 7 all fixed.
+
 \begin{figure}[H]
 \centering
 %% -- 1st figure
@@ -461,12 +463,15 @@ when running concurrent disk throughput tests directly on the servers without
 Ceph involved. The second RAID processor on each DDN controller would max out when
 three or more LUNs were written concurrently. It turns out the root of the problem
 was a regression on DDN firmware update -- in particular, the cache
-mirroring was not behaving as it should.
+mirroring was not behaving as it should.\footnote{DDN recently released a new
+firmware version and we were told the issue has been fixed. Unfortunately, we didn't get
+a chance to verify it during our test cycle.}
 
 %% SCOTT - is running with cache mirroring off and option for a production system or not?
 %% What are the consequences? Did DDN eventually provide a fix? If yes, were we able to test
 %% with it or not?
 
+%% FEIYI: add footnote to clarify the issue.
 
 \begin{figure}[htb]
 \centering
@@ -543,12 +548,14 @@ XFS-formatted storage.
 \label{fig:rados-064-osd}
 \end{figure}
 
-In the single server case as shown in Figure~\ref{fig:rados-064-osd},
-performance gets very close to the hardware limits at roughly 9 OSDs per server
-and then mostly levels out.
+In the single server case as shown in Figure~\ref{fig:rados-064-osd}, ``Writes
+(including Journals)'' refers to how much data is actually being written out the
+DDN chasis, and blue line is how much data the clients are writing.
+We observe that performance gets very close to the hardware limits at roughly 9
+OSDs per server and then mostly levels out.
 
-We also repeated tests looking at RADOS Bench performance as the
-number of OSD server nodes increases. The results are summarized in
+We also repeated tests looking at RADOS Bench performance as the number of OSD
+server nodes increases from one to four. The results are summarized in
 Figure~\ref{fig:rados-064-oss}. As the number of nodes increases, performance
 scales nearly linearly for both reads and writes.
 
@@ -567,9 +574,9 @@ scales nearly linearly for both reads and writes.
 
 \section{Improving Ceph File System Performance}
 
-The initial stability issues we encountered are fixed by moving 
-from Ceph version 0.48/0.55 to 0.64, the latest stable version at the time. Now IOR test could
-complete even during long runs. This is another sign of how much Ceph
+The initial stability issues we encountered are fixed by moving from Ceph
+version 0.48/0.55 to 0.64, the latest stable version at the time. Now IOR test
+could complete even during long runs. This is another sign of how much Ceph
 development is in flux.
 
 Another fix comes in the way we create the pool: the default data pool being used
@@ -654,7 +661,8 @@ mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
 \begin{figure}[htb]
 \centering
 \includegraphics[width=4in]{ior-kernel-39}
-\caption{Kernel changes to 3.9, IOR with 4 MB transfer size}
+\caption{CephFS performance with Kernel changes to 3.9, IOR with 4 MB transfer
+size}
 \label{fig:ior-kernel-39}
 \end{figure}
 
