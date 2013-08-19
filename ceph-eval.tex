@@ -366,7 +366,7 @@ beginning of each test:
 \end{Verbatim}
 
 
-Here, 0 is the default value of \verb!drop_cahces!; 1 is to free pagecaches, 2
+Here, 0 is the default value of \verb!drop_caches!; 1 is to free pagecaches, 2
 is to free dentries and inodes, 3 is to free pagecache, dentries, and inodes.
 
 
@@ -374,12 +374,14 @@ Our first round of tests was less than ideal as we encountered various issues. F
 the sake of completeness, we first summarize the results, then discuss
 further tuning efforts and improvements.
 
-The full permutation of IOR parameters were not explored due to IO errors we encountered.
+The full permutation of IOR parameters were not explored due to I/O errors we encountered.
 We were, however, able to record results in two extreme cases as far as
 transfer size is concerned: 4 KB and 4 MB, using the same number of OSS servers
 (4) and same block size (8 GB), the results are illustrated in Figure
 \ref{fig:ior4k} and \ref{fig:ior4m}, we make the following observations:
 
+%% SCOTT - figures 4-7 do not seem to use a base of 0 for the Y axis. Is this common?
+%% SCOTT - Can figures 6-7 have the same Y axis with either base 2 or base 10 values?
 
 \begin{figure}[H]
 \centering
@@ -430,21 +432,21 @@ following sections.
 \end{figure}
 
 
-After the initial test results were found, various combinations of tweaks were
-attempted including changing the number of filestore op threads, putting all
+After the initial test results, we tried various combinations of tweaks
+including changing the number of filestore op threads, putting all
 of the journals on the same disks as the data, doubling the OSD count, and
 upgrading Ceph to a development version which reduces the seek overhead caused
-by \texttt{pginfo} and \texttt{pglog} updates on XFS (These enhancements are
+by \texttt{pginfo} and \texttt{pglog} updates on XFS (these enhancements are
 now included as of the Ceph Cuttlefish release).  The two biggest improvements
 resulted from disabling CRC32c checksums and increasing the OSD count on the
 server.  With these changes, we are seeing better results.
 
-A script written by Inktank for internal Ceph testing was used to perform
-parametric sweeps over Ceph configuration parameters to examine how different
+We ran a script written by Inktank for internal Ceph testing to perform
+sweeps over Ceph configuration parameters to examine how different
 tuning options affect performance on the DDN platform. The result of this
-parameter probing is illustrated in Figure~\ref{fig:parametric}. 
+parameter probing is illustrated in Figure~\ref{fig:parametric}.
 
-As a result of this testing, performance was again improved slightly by
+As a result of this testing, we improved performance slightly by
 increasing the size of various Ceph buffers and queues, enabling AIO journals,
 and increasing the number of OSD op threads.
 
@@ -453,13 +455,17 @@ and increasing the number of OSD op threads.
 
 
 Despite the excellent write throughput we saw during the individual server
-tests, throughput did not scale.  A significant amount of time was spent
+tests, throughput did not scale.  We spent a significant amount of time
 investigating this phenomenon. Ultimately, we were able to replicate this finding
 when running concurrent disk throughput tests directly on the servers without
-Ceph involved. The 2nd RAID processor on each DDN controller would max out when
-3 or more LUNs were written concurrently. It turns out the root of the problem
+Ceph involved. The second RAID processor on each DDN controller would max out when
+three or more LUNs were written concurrently. It turns out the root of the problem
 was a regression on DDN firmware update -- in particular, the cache
 mirroring was not behaving as it should.
+
+%% SCOTT - is running with cache mirroring off and option for a production system or not?
+%% What are the consequences? Did DDN eventually provide a fix? If yes, were we able to test
+%% with it or not?
 
 
 \begin{figure}[htb]
@@ -482,12 +488,11 @@ Unfortunately, read performance did not scale as well.
 
 During these tests, a trend that previously had been seen became more apparent.
 During reads, there were periods of high performance followed by periods of low
-performance or outright stalls that could last for up to 20 seconds at a time. 
+performance or outright stalls that could last for up to 20 seconds at a time.
 After several hours of diagnostics, Inktank observed that outstanding operations
 on the clients were not being shown as outstanding on the OSDs.  This appeared
 to be very similar to a problem Jim Schutt at Sandia National labs encountered
-with TCP autotuning in the Linux Kernel.
-\footnote{\url{http://marc.info/?l=ceph-devel&m=133009796706284&w=2}}.
+with TCP autotuning in the Linux Kernel.\footnote{\url{http://marc.info/?l=ceph-devel&m=133009796706284&w=2}}
 TCP auto tuning enables TCP window scaling by default and automatically adjusts
 the TCP receive window for each connection based on link conditions such as
 bandwidth delay product. We have observed this will make a notable improvement
@@ -526,10 +531,15 @@ underlying object store could get to the node hardware limitations as the number
 of OSDs/LUNs used on the node increased. Note all the tests performed were against
 XFS-formatted storage.
 
+%% SCOTT - the title in the figure needs to change IO to I/O
+
+%% SCOTT - how do writes inc. journals exceed the client network max? Dual ports
+%% on the single server?
+
 \begin{figure}[htb]
 \centering
 \includegraphics[width=5in]{rados-064-osd}
-\caption{RADOS Bench Scaling on \# of OSD, Ceph 0.64, 4 MB IO, 8 Client Nodes}
+\caption{RADOS Bench Scaling on \# of OSD, Ceph 0.64, 4 MB I/O, 8 Client Nodes}
 \label{fig:rados-064-osd}
 \end{figure}
 
@@ -542,11 +552,14 @@ number of OSD server nodes increases. The results are summarized in
 Figure~\ref{fig:rados-064-oss}. As the number of nodes increases, performance
 scales nearly linearly for both reads and writes.
 
+%% SCOTT - why does the client network max scale in figure 12 but not figure 11?
+%% Do they no measure the same thing (i.e. a single server)? If not, the text
+%% needs to make it more clear.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=5in]{rados-064-oss}
-\caption{RADOS Bench Scaling on \# of Server, Ceph 0.64, 4 MB IO, 8 Client Nodes}
+\caption{RADOS Bench Scaling on \# of Server, Ceph 0.64, 4 MB I/O, 8 Client Nodes}
 \label{fig:rados-064-oss}
 \end{figure}
 
@@ -612,7 +625,7 @@ please refer to \url{http://lwn.net/Articles/517082/} and
 \url{https://patchwork.kernel.org/patch/1338691/}.}
 
 ORNL installed kernel 3.9 on all of the test systems and Inktank performed a
-RADOS Bench test to verify that there was no degradation vs previous tests.  The
+RADOS Bench test to verify that there was no degradation versus previous tests.  The
 results were extremely positive.
 
 
@@ -635,6 +648,8 @@ mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
    name=admin,nocrc,readdir_max_bytes=4104304,readdir_max_entries=8192
 \end{Verbatim}
 
+%% SCOTT - is figure 15 IOR over Ceph and 14 is RADOS bench? If so, can we
+%% mention that 15 shows the filesystem performance?
 
 \begin{figure}[htb]
 \centering
@@ -655,6 +670,9 @@ As before, we ran IOR scaling tests with two cases: transfer size 4 KB and 4 MB.
 These results are illustrated in Figure~\ref{fig:ior-064}. As expected, we are
 seeing a much improved picture of read and write performance, very much in
 line with RADOS bench performance.
+
+%% SCOTT - Can we use the same Y axis for these figures? Any comment from Inktank
+%% as to why 4 KB performance is better than 4 MB performance?
 
 \begin{figure}[htb]
 \centering
@@ -697,7 +715,7 @@ saw with RADOS Bench.
 
 In our particular setup, we have only one metadata server (MDS)
 configured. Therefore, this is not a scalability test on the performance of
-clustered MDS, which would be very interesting and might as well come later.
+clustered MDS, which would be very interesting.
 Instead, we focus on a single MDS, multiple clients (up to 8) and see how it
 scales. The particular parameters we use for testing are:
 
@@ -780,18 +798,18 @@ This is preliminary observations from mostly performance perspective:
   \item Ceph performs \textbf{metadata + data} journaling, which is fine for host
   system that has locally attached disk. However, this presents a problem in DDN
   SFA10-like hardware, where the backend LUNs are exposed as block device
-  through SRP over IB. The journaling write would requires double bandwidth
-  compare to Lustre-like metadata only journaling mechanism. For Ceph to anything
-  viable in this facility, there has to be a solution for this.
+  through SCSI Request Protocol (SRP) over IB. The journaling write requires twice the bandwidth
+  compare to Lustre-like metadata-only journaling mechanism. For Ceph to be
+  viable in this facility, we will need to address this.
 
-  \item Ceph is observed to have consistent results and linear scalability at the
-  RADOS level. However, it broke down at the file system level with synthetic
+  \item We observed consistent results and linear scalability at the
+  RADOS level. However, we did not observe the same at the file system level with synthetic
   benchmark suites such as IOR. We have experienced large performance swings
   during different runs, very low read performance when transfer size is small,
-  and IO errors tend to happen when system is under stress (more clients and
+  and I/O errors tend to happen when system is under stress (more clients and
   large transfer sizes). These are not particularly reproducible results, but it
-  suggests the level of maturity still have a long way to go.
-  
+  suggests that there are opporunities for code improvement and maturation.
+
 \end{itemize}
 
 \section*{Appendix A - CephFS Final Mount Command}
