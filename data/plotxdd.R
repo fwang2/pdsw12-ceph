@@ -21,8 +21,8 @@ plot_xdd <- function(f, m) {
             method=loess,
             #geom=c("point", "smooth"),
             ylab="Max (MB/s)\n",
-            xlab="\nNum of Devices",
-            main=paste("XFS ", m, " xdd -dio, req.size=32768", sep=""))
+            xlab="\nNum of LUNs",
+            main=paste("XFS ", m, " performance\n (xdd -dio, req.size=32768)", sep=""))
     g = g + scale_shape_discrete(name="queue depth")
     g = g + scale_color_discrete(name="queue depth")
     g = g + geom_point(size=3.5)
