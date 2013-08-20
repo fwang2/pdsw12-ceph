@@ -501,7 +501,9 @@ count on the server.  With these changes, we are seeing better results.
 We ran a script written by Inktank for internal Ceph testing to perform
 sweeps over Ceph configuration parameters to examine how different
 tuning options affect performance on the DDN platform. The result of this
-parameter probing is illustrated in Figure~\ref{fig:parametric}.
+parameter probing is illustrated in Figure~\ref{fig:parametric}. Please refer
+to Appendix E for explanations of these probed parameters.
+
 
 As a result of this testing, we improved performance slightly by
 increasing the size of various Ceph buffers and queues, enabling AIO journals,
@@ -908,5 +910,14 @@ change accordingly.
 
 \input{ceph-short.txt}
 
+\section*{Appendix E - Tuning Parameters}
+\addcontentsline{toc}{section}{Appendix E - Tuning Parameters}
+
+For parameter sweep, here are the settings we iterated through.  Some of these
+are "compound" settings where we increased or decreased multiple things in the
+ceph.conf file at the same time to reduce the number of permutations that would
+need to be tested.
+
+\input{tuning.txt}
 
 \end{document}
