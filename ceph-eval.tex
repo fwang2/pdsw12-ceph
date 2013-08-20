@@ -243,11 +243,13 @@ following set of tuning parameters on OSD servers:
 \section{XFS Performance As Backend File System}
 
 Ceph supports multiple backend file systems including Btrfs, Ext4, and XFS.
-Due to its performance and maturity, we chose XFS. We experimented with XFS to
-acquire a set of configuration parameters which provided optimal performance for
-the SFA10K. We sampled a selected set of parameters (block size, queue depth,
-request size, sequential read and write). We settled on the following
-configuration: mount with \verb!nobarrier,noatim,inode64! options.
+Due to its maturity and Inktank's recommendations, we chose XFS.\footnote{It
+should be noted that in testing cases while we can compare XFS vs.
+Brtfs, Brtfs generally shows better performance results.} We experimented with
+XFS to acquire a set of configuration parameters which provided optimal
+performance for the SFA10K. We sampled a selected set of parameters (block size,
+queue depth, request size, sequential read and write). We settled on the
+following configuration: mount with \verb!nobarrier,noatim,inode64! options.
 The \verb!inode64! option had a notable improvement on sequential write (around
 20\%).
 
