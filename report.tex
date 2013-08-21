@@ -72,12 +72,12 @@
 \section{Introduction}
 
 National Center for Computational Sciences (NCCS), in collaboration with
-Inktank Inc, has prepared a detailed performance and scalability study of
-Ceph file system. Ceph is originated from Sage Weil's PhD research
-at UC Santa Cruz around 2007 and it is designed to be a reliable, scalable
+Inktank Inc, prepared this performance and scalability study of
+Ceph file system. Ceph originated from Sage Weil's PhD research
+at UC Santa Cruz around 2007 and it was designed to be a reliable, scalable
 fault-tolerant parallel file system. Inktank is now the major developer behind
 the open-source parallel file system to sheperd its development and provide
-commerical support.
+commercial support.
 
 In comparison to other parallel file systems, Ceph has a number of distinctive
 features:
@@ -86,16 +86,17 @@ features:
  
 \item Ceph has an intelligent and powerful data placement mechanism, known as
   CRUSH. The CRUSH algorithm allows a client to pre-calculate object
-  placement and layout while taking into consideration failure domains and
+  placement and layout while taking into consideration of failure domains and
   hierarchical storage tiers.
   
 \item From the start, Ceph's design anticipated managing metadata and the name space
-  with a cluster of metadata servers.
+  with a cluster of metadata servers. It utilized a dynamic subtree partitioning
+  strategy to continuously adapt metadata distribution to current demands.
 
-\item Ceph's design assumes that the system is composed of
-unreliable components; fault-detection and fault-tolerance (e.g., replication) are
-the norm rather than the exception. This is in line with the expectations of
-Exascale computing.
+\item Ceph's design assumes that the system is composed of unreliable
+components; fault-detection and fault-tolerance (e.g., replication) are the
+norm rather than the exception. This is in line with the expectations and
+future directions of Exascale computing.
 
 \item Ceph is built on top of a unified object management layer,
 \texttt{RADOS}. Both metadata and the file data can take advantage of this
@@ -110,13 +111,13 @@ experience.
 
 
 As part of this effort, we set up a dedicated testbed within NCCS for the Ceph
-file system evaluation. The goal of our study is to investigate the feasibility
-of using the Ceph for our future HPC storage deployment.
-This report presents our experience, results, and observations. While evaluating
-our results, please keep in mind that Ceph has not matured yet for scientific
-HPC community that its code base is changing rapidly. In between releases, we
-often experienced different outcomes. We will try to make clear in the report
-when such changes occurred.
+file system evaluation. The goal of our study is to investigate the
+feasibility of using the Ceph for our future HPC storage deployment.  This
+report presents our experience, results, and observations. While evaluating
+our results, please keep in mind that Ceph is still a relatively
+\textit{young} parallel file system and its code base is changing rapidly. In
+between releases, we often experienced different stability and performance
+outcomes.  We will try to make clear in the report when such changes occurred.
 
 \section{Testbed Environment Description}
 
@@ -133,7 +134,7 @@ Figure~\ref{fig:ddn-sfa10k}.
 \begin{figure}[htb]
 \centering
 \includegraphics[width=4in]{figs/sfa10k}
-\caption{DDN SFA10K Hardware and Host Connection Diagram}
+\caption{DDN SFA10K hardware and host connection diagram}
 \label{fig:ddn-sfa10k}
 \end{figure}
 
@@ -162,9 +163,10 @@ distinguish it from above.
 \end{table}
 
 All hosts  (client and servers) were configured with Redhat 6.3 and kernel
-version 3.5.1 (rhl-ceph image), Glibc 2.12 with syncfs support, locally patched.
-We used the Ceph 0.55 release in the initial tests, upgraded to 0.64 and then to
-0.67RC for a final round of tests.
+version 3.5.1 initially, and later upgraded to 3.9 (rhl-ceph image), Glibc
+2.12 with syncfs support, locally patched.  We used the Ceph 0.48 and 0.55
+release in the initial tests, upgraded to 0.64 and then to 0.67RC for a final
+round of tests.
 
 %For a complete a list of hosts that are running ceph images, one can execute:
 
@@ -175,9 +177,9 @@ We used the Ceph 0.55 release in the initial tests, upgraded to 0.64 and then to
 \section{Baseline Performance}
 \label{sec:block-io}
 
-\subsection{Block I/O over Native IB}
-We first established baseline performance by measuring observed block I/O
-performance.
+\subsection{Block I/O over Native IB} 
+
+We first established baseline performance by measuring block I/O performance.
 At the block-level, with each LUN configured as a RAID6 8+2 array, we had the
 following results as shown in Table~\ref{tbl:block-io-baseline}.
 
@@ -212,13 +214,11 @@ IPoIB can transfer data at 2.7 GB/s (the hosts are tuned per recommendations
 from Mellanox). With all four hosts (OSD servers), we expect the aggregate
 throughput to be in the neighborhood of 10 GB/s.
 
-Unfortunately there was not enough time to do more detailed analysis of the network
-performance. Later, we will see RADOS is performing a
-maximum of 5-6 GB/s driven by four hosts.  So, it shows that we
-have enough network bandwidth (i.e., IP over IB is not a bottleneck in this
-case).
-
-
+Unfortunately there was not enough time to do more detailed analysis of the
+network performance. However, as we observed later, RADOS is performing no
+more than 8 GB/s driven by four server hosts. This confirms that we have
+provisioned enough network bandwidth. In other words, IP over IB is not a
+bottleneck in this case.
 
 
 \section{System Tuning}
@@ -293,21 +293,22 @@ The \verb!inode64! option had a notable improvement on sequential write (around
 
 % % Are the read and write graphs wrong or should the second sentence below be
 % about write % instead of read?
+
 The read and write performance results are summarized in
-Figures~\ref{fig:xfs-read} and~\ref{fig:xfs-write}, respectively. These show
-scaling behavior over the number of LUNs, which indicates that XFS can reach
-the peak write performance with five SATA LUNs. Increasing number of LUNs
-beyond 5, degradation happened. 
-Changes to the queue depth was not observed to make any obvious difference in
-the performance. For these tests, we used the \verb!xdd! benchmark with direct
-I/O and a request size of 32 KB.
+Figures~\ref{fig:xfs-read} and~\ref{fig:xfs-write}, respectively. These graphs
+show scaling behavior over the number of LUNs, which indicates that XFS can
+reach the peak write performance with just five SATA LUNs. Increasing number
+of LUNs beyond 5, degradation happened.  Also, we did not observe any obvious
+differences in performance when varying the queue depth parameter.  For these
+tests, we used the \verb!xdd! benchmark with direct I/O and a request size of
+32 KB.
 
 
 \section{Ceph RADOS Scaling: Initial Test}
 
-RADOS is the Ceph object store, the foundational component for CephFS file
-system. There are two types of scaling tests we are interested at the RADOS
-layer:
+RADOS is a reliable distributed object store, the foundational component for
+CephFS file system. There are two types of scaling tests we are interested at
+the RADOS layer:
 
 \begin{itemize}
   \item scaling on the number of OSD servers
@@ -382,7 +383,7 @@ it does not explain the read performance -- it is a little better than write,
 but still far from the theoretical maximum.
 
 \section{Ceph File System Performance: Initial Test}
-
+\label{sec:ior-initial}
 We used the synthetic IOR benchmark suite for file system level performance and
 scalability test.
 The particular parameter setup is show in Table \ref{tbl:ior}. Each client node
@@ -459,15 +460,18 @@ transfer size is concerned: 4 KB and 4 MB, using a fixed number of OSD servers
 
 
 \begin{itemize}
-  \item The small read (4 KB transfer size) performance is almost an anomaly --
-  we will investigate why it is so low compare to write performance and improved
-  results in Section~\ref{sec:improve-ior}.
+
+  \item The small read (4 KB transfer size) performance is almost an anomaly
+  -- we will investigate why it is so low compare to write performance and
+  present improved results in Section~\ref{sec:improve-ior}.
+
   \item The large read (4 MB transfer size) performance is almost half of the
   RADOS read performance.
    
   \item The write performance is also about half of what we can obtain from
   RADOS Bench. When number of clients reaches 8, there is a significant
   performance drop as well. 
+
 \end{itemize}
 
 
@@ -512,7 +516,7 @@ increasing the size of various Ceph buffers and queues, enabling AIO journals,
 and increasing the number of OSD op threads.
 
 
-\subsection{Disable Cache Mirroring on controllers}
+\subsection{Disable Cache Mirroring on Controllers}
 
 During a second round of test performed by Inktank, we noticed a dramatic drop
 on RADOS performance: even though write throughput on individual server met the
@@ -558,8 +562,8 @@ performance or outright stalls that could last for up to 20 seconds at a time.
 After several hours of diagnostics, Inktank observed that outstanding operations
 on the clients were not being shown as outstanding on the OSDs.  This appeared
 to be very similar to a problem Jim Schutt at Sandia National labs encountered
-with TCP autotuning in the Linux Kernel.\footnote{\url{http://marc.info/?l=ceph-devel&m=133009796706284&w=2}}
-TCP auto tuning enables TCP window scaling by default and automatically adjusts
+with TCP autotuning in the Linux
+kernel.\footnote{\url{http://marc.info/?l=ceph-devel&m=133009796706284&w=2}} TCP auto tuning enables TCP window scaling by default and automatically adjusts
 the TCP receive window for each connection based on link conditions such as
 bandwidth delay product. We have observed this will make a notable improvement
 on Ceph read performance, as the results shown in
@@ -637,19 +641,19 @@ nodes}
 \section{Improving Ceph File System Performance}
 \label{sec:improve-ior}
 
-The initial stability issues mentioned in chapters (X,Y,Z) are fixed by
-migrating from Ceph version 0.48/0.55 to 0.64, the latest stable version at the
+The initial stability issues mentioned in Section~\ref{sec:ior-initial} are
+fixed by migrating from Ceph version 0.48/0.55 to 0.64, the latest stable version at the
 time of writing this report.  Upgrading to the latest stable Ceph release
 allowed us to run a full IOR parameter sweep for the first time since we
 started evaluating the performance and scalability of the Ceph file system.
 This is another sign of how much Ceph development is currently in flux.
 
 Another fix introduced by Ceph version 0.64 was in pool creation.  The default
-data pool used by previous Ceph version were set to 2x replication at the
-minimum. This potentially halved the write performance. With version 0.64 we
-now had the ability to set the replication level to 1, which is the preferred
-value for a HPC environment like ours running on high-end and reliable storage
-backend hardware (e.g. DDN SFA10K). 
+data pool used by previous Ceph version were set to 2x replication by mistake.
+This potentially halved the write performance. With version 0.64 we explicitly
+set the replication level to 1, which is the preferred value for a HPC
+environment like ours running on high-end and reliable storage backend hardware
+(e.g. DDN SFA10K).
 
 Even with these two changes in place, less-than-ideal write performance and
 very poor read performances were observed during our tests.  We also observed
@@ -700,15 +704,15 @@ installed on our test systems.\footnote{For more information,
 please refer to \url{http://lwn.net/Articles/517082/} and
 \url{https://patchwork.kernel.org/patch/1338691/}.}
 
-We upgraded our test systems with kernel version 3.9 and performed a
-RADOS Bench test.  The
-results were extremely positive and presented in Figure~\ref{fig:rados-kernel-35vs39}.
+We upgraded our test systems with kernel version 3.9 and performed RADOS Bench
+test.  The results were extremely positive and presented in
+Figure~\ref{fig:rados-kernel}.
 
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=4in]{rados-kernel-35vs39}
-\caption{RADOS bench: Kernel 3.5 vs. 3.9}
+\caption{RADOS bench: Linux kernel version 3.5 vs. 3.9}
 \label{fig:rados-kernel}
 \end{figure}
 
@@ -733,7 +737,7 @@ Figure~\ref{fig:ior-kernel-39}.
 \begin{figure}[htb]
 \centering
 \includegraphics[width=4in]{ior-kernel-39}
-\caption{CephFS performance with Kernel changes to 3.9, IOR with 4 MB transfer
+\caption{CephFS performance with kernel changes to 3.9, IOR with 4 MB transfer
 size}
 \label{fig:ior-kernel-39}
 \end{figure}
@@ -827,7 +831,7 @@ We summarize the results as follows:
 
 \begin{itemize}
 
-\item Within a single sharing mode (either shared or unique directory), stat
+\item With either shared or unique directory (\verb!-u!), stat
 operations for directories and files exhibit strong linear scaling. Same strong
 linear scaling is also observed for file read operations. 
 
@@ -837,8 +841,8 @@ clients, it is not so if we zoom in, see \ref{fig:mdtest-fcreate} and
 contention for shared directory. The performance degradation amount to 50\% or
 more.
 
-\item Though the same saturation (or degradation) trend is not observed for file
-creation operation, it is likely due to lack of workload stress on MDS.
+\item Though the same saturation (or degradation) trend was not observed for
+file creation operation, it is likely due to lack of workload stress on MDS.
 
 \end{itemize}
 
@@ -872,8 +876,8 @@ Below are our preliminary observations from mostly performance perspective:
   \item Ceph is built on the assumption that the underlying hardware components
 are unreliable, with little or no redundancy and failure detection capability.
 This assumption is not valid for high-end HPC centers like ours. We have
-disabled replication for pools, but this will take a toll somewhere in the
-processing and we do not know yet if this would be significant.
+disabled replication for pools, we haven't measured and quantified
+processing overhead and we do not know yet if this would be significant.
 
   \item Ceph performs \textbf{metadata + data} journaling, which is fine for
 host systems that has locally attached disk. However, this presents a problem

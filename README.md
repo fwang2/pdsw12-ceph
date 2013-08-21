@@ -1,30 +1,27 @@
-
-## For ORNL tech report: 
-
-   git checkout techreport
-
-## For workshop version
-
-   git checkout workshop
-
-
 ## Pre-requisite:
-
 
     MacTex package
     
-    Fonts: rosario, consolas, it should fall back to default when the fonts
-    are not detected
+    Fonts: rosario, consolas, used in tech report version
+
+## For ORNL tech report: 
+
+    make report
 
 
-## Compile the report
+## For workshop version
+
+    make paper
+
+
+
+## For both version
 
     make
 
 ## Clean up the generated junk
 
     make clean
-
 
 
 ## Sweep Test program:

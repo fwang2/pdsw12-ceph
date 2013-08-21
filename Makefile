@@ -1,5 +1,10 @@
+paper:
+	./mk paper
+report:
+	./mk report
 all:
-	./mk ceph-eval
+	./mk report
+	./mk paper
 clean:
-	./mk -C ceph-eval
-
+	./mk -C paper
+	./mk -C report
