@@ -637,36 +637,42 @@ nodes}
 \section{Improving Ceph File System Performance}
 \label{sec:improve-ior}
 
-The initial stability issues we encountered are fixed by moving from Ceph
-version 0.48/0.55 to 0.64, the latest stable version at the time. Now IOR test
-could complete even during long runs. This is another sign of how much Ceph
-development is in flux.
+The initial stability issues mentioned in chapters (X,Y,Z) are fixed by
+migrating from Ceph version 0.48/0.55 to 0.64, the latest stable version at the
+time of writing this report.  Upgrading to the latest stable Ceph release
+allowed us to run a full IOR parameter sweep for the first time since we
+started evaluating the performance and scalability of the Ceph file system.
+This is another sign of how much Ceph development is currently in flux.
 
-Another fix comes in the way we create the pool: the default data pool being used
-by previous CephFS cluster are set to 2x replication, which can potentially
-halve the write performance. Even with these changes in place, Inktank still
-reproduced the less-than-ideal write performance and very poor read
-performance as observed by ORNL.  Further, by increasing the number of IOR
-processes per client node, read performance actually degraded further
-indicating some kind of contention either on the clients or on the OSD
-servers.
+Another fix introduced by Ceph version 0.64 was in pool creation.  The default
+data pool used by previous Ceph version were set to 2x replication at the
+minimum. This potentially halved the write performance. With version 0.64 we
+now had the ability to set the replication level to 1, which is the preferred
+value for a HPC environment like ours running on high-end and reliable storage
+backend hardware (e.g. DDN SFA10K). 
+
+Even with these two changes in place, less-than-ideal write performance and
+very poor read performances were observed during our tests.  We also observed
+that by increasing the number of IOR processes per client node, the read
+performance degraded even further indicating some kind of contention either on
+the clients or on the OSD servers.
 
 
 \subsection{Disabling Client CRC32}
 
-ORNL at this point was able to both make more client nodes available and also
-install a profiling tool called \verb!perf! that is extremely useful for
-profiling both kernel and user space code.  Profiling with \verb!perf! showed
-high CPU utilization on the client due to crc32c processing in the Ceph kernel
-client.  Luckily, crc32 checksums can be disabled by changing the CephFS mount
-options:
+At this point, we were able to both make more client nodes available for Ceph
+file system-level testing and also install a profiling tool called \verb!perf!
+that is extremely useful for profiling both kernel and user space codes.
+Profiling with \verb!perf! showed high CPU utilization on test clients due to
+crc32c processing in the Ceph kernel client.  crc32 checksums can be disabled
+by changing the CephFS mount options:
 
 \begin{Verbatim}
 mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o name=admin,nocrc
 \end{Verbatim}
 
 
-With client CRC32 disabled, we repeated the IOR test and the results are showin
+With client CRC32 disabled, we repeated the IOR tests. New results are shown in
 in Figure~\ref{fig:ior-no-client-crc32}. 
 
 \begin{figure}[htb]
@@ -677,26 +683,26 @@ in Figure~\ref{fig:ior-no-client-crc32}.
 \end{figure}
 
 We observed that IOR write throughput increased dramatically and is now very
-close to the throughput we were able to achieve with RADOS Bench, but reads
-continued to be slow and continued to scale inversely with the number of client
-processes.  Please note that since these tests were performed, Inktank has
-implemented SSE4-based CRC32 code for Intel CPUs.  While any kernel based CRC32
-processing should have already been using SSE4 instructions on Intel CPUs, this
-will allow any user-land Ceph processes to process CRC32 checksums with
-significantly less overhead.
+close and comparable to the RADOS Bench performance. Read performance continued
+to be poor and continued to scale inversely with the increasing number of
+client processes.  Please note that, since these tests were performed, Inktank
+has implemented SSE4-based CRC32 code for Intel CPUs.  While any kernel based
+CRC32 processing should have already been using SSE4 instructions on Intel
+CPUs, this update will allow any user-land Ceph processes to process CRC32
+checksums with significantly less overhead.
 
 \subsection{Improving IOR Read Performance}
 
 Deeper analysis with perf showed that there was heavy lock contention during
 parallel compaction in the Linux kernel memory manager.  This behavior was first
-observed roughly in the kernel 3.5 time frame which happens to be the kernel
-that ORNL had installed on the test systems.\footnote{For more information,
+observed roughly in the kernel 3.5 time frame which was the kernel
+installed on our test systems.\footnote{For more information,
 please refer to \url{http://lwn.net/Articles/517082/} and
 \url{https://patchwork.kernel.org/patch/1338691/}.}
 
-ORNL installed kernel 3.9 on all of the test systems and Inktank performed a
-RADOS Bench test to verify that there was no degradation versus previous tests.  The
-results were extremely positive.
+We upgraded our test systems with kernel version 3.9 and performed a
+RADOS Bench test.  The
+results were extremely positive and presented in Figure~\ref{fig:rados-kernel-35vs39}.
 
 
 \begin{figure}[htb]
@@ -708,10 +714,10 @@ results were extremely positive.
 
 
 
-With the kernel changes writes performance improved slightly, while read
-performance improved dramatically.  In addition to the kernel change, Sage Weil
-suggested increasing the amount of read-ahead being performed by the CephFS
-kernel client:
+As can be seen, with the 3.9 kernel, while there was a slight improvement on
+write performance, read performance improved dramatically.  In addition to the
+kernel change, Sage Weil from InkTank suggested increasing the amount of CephFS
+client kernel read-ahead cache size as:
 
 \begin{Verbatim}[samepage=true]
 mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
@@ -720,6 +726,9 @@ mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
 
 %% SCOTT - is figure 15 IOR over Ceph and 14 is RADOS bench? If so, can we
 %% mention that 15 shows the filesystem performance?
+
+IOR results reflecting the read-ahead cache size change are presented in
+Figure~\ref{fig:ior-kernel-39}.
 
 \begin{figure}[htb]
 \centering
@@ -730,17 +739,16 @@ size}
 \end{figure}
 
 
-By installing a new kernel, increasing read-ahead, and increasing the number of
-client IOR processes, we were able to achieve a very satisfactory result on this
-test run.
+By installing a newer kernel, increasing read-ahead cache size, and increasing the number of
+client IOR processes, we were able to achieve very satisfactory I/O performance.
 
 
-\subsection{Repeating IOR Scaling Test}
+\subsection{Repeating the IOR Scaling Test}
 
 As before, we ran IOR scaling tests with two cases: transfer size 4 KB and 4 MB.
-These results are illustrated in Figure~\ref{fig:ior-064}. As expected, we are
-seeing a much improved picture of read and write performance, very much in
-line with RADOS bench performance.
+These results are illustrated in Figure~\ref{fig:ior-064}. As expected, we saw
+saw  improved read and write performance. These new read and write performance are in
+line with observed RADOS bench performance.
 
 %% SCOTT - Can we use the same Y axis for these figures? Any comment from Inktank
 %% as to why 4 KB performance is better than 4 MB performance?
@@ -753,15 +761,15 @@ line with RADOS bench performance.
 \label{fig:ior-064}
 \end{figure}
 
-We observe a couple of places where the average write throughput is quite a
-bit lower than the maximum.  This behavior was observed during other tests as well,
+Throughout our IOR testing, we observed that the average write throughput is 
+lower than the maximum.  This behavior was observed during other tests as well,
 indicating that we may have periods of time where write throughput is
 temporarily degrading.  Despite these issues, performance generally seems to be
-improving as the number of clients increases.  Writes seem to be topping out at
+improving with respect to increasing number of clients.  Writes seem to be topping out at
 around 5.2 GB/s (which is roughly what we would expect).  Reads seem to be
 topping out anywhere from 5.6-7 GB/s, however it is unclear if read performance
-would continue scaling with more clients and get closer to the 8 GB/s+ numbers we
-saw with RADOS Bench.
+would continue scaling with more clients and get closer to ~8 GB/s  we
+obervered with RADOS Bench.
 
 
 \section{Metadata Performance}
@@ -784,20 +792,21 @@ saw with RADOS Bench.
 \end{figure}
 
 
-In our particular setup, we have only one metadata server (MDS)
-configured. Therefore, this is not a scalability test on the performance of
-clustered MDS, which would be very interesting.
-Instead, we focus on a single MDS, multiple clients (up to 8) and see how it
-scales. The particular parameters we use for testing are:
+In our particular setup, we only had one metadata server (MDS) configured.
+Therefore, this is not a scalability test on the performance of Ceph clustered
+MDS, which would have been very interesting.  Instead, we focus on a single MDS
+performance and exercise it with up to 8 clients to observe the single MDS
+performance scaling. We used mdtest as our benchmark tool. Mdtest parameters
+used for this test are:
 
 \begin{itemize}
 \item \verb!-w 1048576 -y!: for each created file, we write 1 MB data and
-perform sync after it. This is a more realistic use case scenario than just
-open, close and removal.
+perform a sync operation.  This is a more realistic use case scenario than just
+open, close and removal sequence of metadata operations.
 
-\item \verb!-n 1000!: this is per client file \textit{and} directories. For eight
-clients, the number of files and directories is 8,000. Since we did not specify
-either \verb!-D! or \verb!-F!, so this is a mixture of both.
+\item \verb!-n 1000!: Per client file \textit{and} directory workload. For eight
+clients, the total number of files and directories in the workload is 8,000. Since we did not specify
+either \verb!-D! or \verb!-F!, this is a mixture of both.
 
 \item \verb!-d /mnt/cephfs/tmp!: we do specify a directory, but unlike under
 Lustre file system, where you can have single client multiple mounts (for
@@ -808,7 +817,7 @@ this option, we are exercising unique directories.
 
 \end{itemize}
 
-Each test iterates five times and we are showing the max. 
+Each test iterates five times and we are presenting the maximum out of all five iterations. 
 We summarize the results as follows:
 
 %Figure~\ref{fig:mdtest1c} is meant to give an overview on the trending of each
@@ -818,9 +827,9 @@ We summarize the results as follows:
 
 \begin{itemize}
 
-\item Within a single sharing mode (either shared or unique directory), the
-directory stat and file stat, as well as file read exhibit strong linear
-scaling property. 
+\item Within a single sharing mode (either shared or unique directory), stat
+operations for directories and files exhibit strong linear scaling. Same strong
+linear scaling is also observed for file read operations. 
 
 \item While the other operations seems unaffected or flat by the number of
 clients, it is not so if we zoom in, see \ref{fig:mdtest-fcreate} and
@@ -828,8 +837,8 @@ clients, it is not so if we zoom in, see \ref{fig:mdtest-fcreate} and
 contention for shared directory. The performance degradation amount to 50\% or
 more.
 
-\item Though the same saturation or degradation trend is not observed for file
-creation, it is likely due to we have not put enough of workload stress on MDS.
+\item Though the same saturation (or degradation) trend is not observed for file
+creation operation, it is likely due to lack of workload stress on MDS.
 
 \end{itemize}
 
@@ -856,30 +865,31 @@ further.
 
 \section{Observations and Conclusions}
 
-This is preliminary observations from mostly performance perspective:
+Below are our preliminary observations from mostly performance perspective:
 
 \begin{itemize}
 
   \item Ceph is built on the assumption that the underlying hardware components
-  are unreliable, with little or no redundancy and failure detection capability.
-  This is not the case in leadership computing facilities. We have disabled
-  replication for pools, but this will take a toll somewhere in the processing
-  and we do not know if this is significant.
+are unreliable, with little or no redundancy and failure detection capability.
+This assumption is not valid for high-end HPC centers like ours. We have
+disabled replication for pools, but this will take a toll somewhere in the
+processing and we do not know yet if this would be significant.
 
-  \item Ceph performs \textbf{metadata + data} journaling, which is fine for host
-  system that has locally attached disk. However, this presents a problem in DDN
-  SFA10-like hardware, where the backend LUNs are exposed as block device
-  through SCSI Request Protocol (SRP) over IB. The journaling write requires twice the bandwidth
-  compare to Lustre-like metadata-only journaling mechanism. For Ceph to be
-  viable in this facility, we will need to address this.
+  \item Ceph performs \textbf{metadata + data} journaling, which is fine for
+host systems that has locally attached disk. However, this presents a problem
+in DDN SFA10K-like hardware, where the backend LUNs are exposed as block
+devices through SCSI Request Protocol (SRP) over IB. The journaling write
+requires twice the bandwidth compare to Lustre-like metadata-only journaling
+mechanism. For Ceph to be viable in this facility, journaling operations will
+need to further design and engineering.
 
-  \item We observed consistent results and linear scalability at the
-  RADOS level. However, we did not observe the same at the file system level with synthetic
-  benchmark suites such as IOR. We have experienced large performance swings
-  during different runs, very low read performance when transfer size is small,
-  and I/O errors tend to happen when system is under stress (more clients and
-  large transfer sizes). These are not particularly reproducible results, but it
-  suggests that there are opporunities for code improvement and maturation.
+  \item We observed consistent results and linear scalability at the RADOS
+level. However, we did not observe the same at the file system level. We have
+experienced large performance swings during different runs, very low read
+performance when transfer size is small, and I/O errors tend to happen when
+system is under stress (more clients and large transfer sizes). These are not
+particularly reproducible results, but it suggests that there are opportunities
+for code improvement and maturation.
 
 \end{itemize}
 
