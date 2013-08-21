@@ -1,0 +1,50 @@
+\section{Introduction}
+
+National Center for Computational Sciences (NCCS), in collaboration with
+Inktank Inc, prepared this performance and scalability study of
+Ceph file system. Ceph originated from Sage Weil's PhD research
+at UC Santa Cruz around 2007 and it was designed to be a reliable, scalable
+fault-tolerant parallel file system. Inktank is now the major developer behind
+the open-source parallel file system to sheperd its development and provide
+commercial support.
+
+In comparison to other parallel file systems, Ceph has a number of distinctive
+features:
+
+\begin{itemize}
+ 
+\item Ceph has an intelligent and powerful data placement mechanism, known as
+  CRUSH. The CRUSH algorithm allows a client to pre-calculate object
+  placement and layout while taking into consideration of failure domains and
+  hierarchical storage tiers.
+  
+\item From the start, Ceph's design anticipated managing metadata and the name space
+  with a cluster of metadata servers. It utilized a dynamic subtree partitioning
+  strategy to continuously adapt metadata distribution to current demands.
+
+\item Ceph's design assumes that the system is composed of unreliable
+components; fault-detection and fault-tolerance (e.g., replication) are the
+norm rather than the exception. This is in line with the expectations and
+future directions of Exascale computing.
+
+\item Ceph is built on top of a unified object management layer,
+\texttt{RADOS}. Both metadata and the file data can take advantage of this
+uniformity.
+
+\item Most of the Ceph processes reside in user-space. Generally speaking, this makes the
+system easier to debug and maintain. The client-side support has long been
+integrated into Linux mainline kernel, which eases the deployment and out-of-box
+experience.
+
+\end{itemize}
+
+
+As part of this effort, we set up a dedicated testbed within NCCS for the Ceph
+file system evaluation. The goal of our study is to investigate the
+feasibility of using the Ceph for our future HPC storage deployment.  This
+report presents our experience, results, and observations. While evaluating
+our results, please keep in mind that Ceph is still a relatively
+\textit{young} parallel file system and its code base is changing rapidly. In
+between releases, we often experienced different stability and performance
+outcomes.  We will try to make clear in the report when such changes occurred.
+

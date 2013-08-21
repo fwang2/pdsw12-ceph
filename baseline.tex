@@ -1,0 +1,47 @@
+\section{Baseline Performance}
+\label{sec:block-io}
+
+\subsection{Block I/O over Native IB} 
+
+We first established baseline performance by measuring block I/O performance.
+At the block-level, with each LUN configured as a RAID6 8+2 array, we had the
+following results as shown in Table~\ref{tbl:block-io-baseline}.
+
+\begin{table}[htb]
+\centering
+\caption{Block I/O performances on single LUN and single host}
+\label{tbl:block-io-baseline}
+
+\begin{tabular}{| l | l |}
+    \hline
+    SAS single LUN sequential read & ~1.4 GB/s \\
+    SATA single LUN sequential read & ~955 MB/s \\
+    Single host with four SAS LUNs & ~ 2.8 GB/s \\
+    Single host with seven SATA LUNs & ~ 2.6 GB/s \\
+    \hline
+\end{tabular}
+\end{table}
+
+Single host in this table refers to one of four tick-oss nodes. Four tick-oss
+nodes drive the SFA10K backend storage. Overall, we observe that the entire
+system can perform at 11 GB/s, compared to DDN SFA10K's theoretical maximum of
+12 GB/s.
+
+
+\subsection{IP over IB}
+
+Ceph uses the BSD Sockets interface in \texttt{SOCK\_STREAM} mode (i.e., TCP).
+Because our entire testbed is IB-switched, we used IP over IB (IPoIB) for
+networking\footnote{As of writing of this report, Inktank is investigating using
+rsockets to improve performance with IB fabric}. Through simple
+\verb!netperf! tests, we observed that a pair of hosts connected by IB QDR using
+IPoIB can transfer data at 2.7 GB/s (the hosts are tuned per recommendations
+from Mellanox). With all four hosts (OSD servers), we expect the aggregate
+throughput to be in the neighborhood of 10 GB/s.
+
+Unfortunately there was not enough time to do more detailed analysis of the
+network performance. However, as we observed later, RADOS is performing no
+more than 8 GB/s driven by four server hosts. This confirms that we have
+provisioned enough network bandwidth. In other words, IP over IB is not a
+bottleneck in this case.
+

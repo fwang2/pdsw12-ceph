@@ -7,8 +7,10 @@
 % Add the compsoc option for Computer Society conferences.
 %
 
-
-
+\usepackage{microtype}
+\usepackage{comment}
+\usepackage{booktabs}
+\usepackage{fancyvrb}
 
 % *** CITATION PACKAGES ***
 %
@@ -42,7 +44,7 @@
 
 % *** MATH PACKAGES ***
 %
-%\usepackage[cmex10]{amsmath}
+\usepackage[cmex10]{amsmath}
 % A popular package from the American Mathematical Society that provides
 % many useful and powerful commands for dealing with mathematics. If using
 % it, be sure to load this package with the cmex10 option to ensure that
@@ -99,8 +101,8 @@
 % http://www.ctan.org/tex-archive/macros/latex/required/tools/
 
 
-%\usepackage{mdwmath}
-%\usepackage{mdwtab}
+\usepackage{mdwmath}
+\usepackage{mdwtab}
 % Also highly recommended is Mark Wooding's extremely powerful MDW tools,
 % especially mdwmath.sty and mdwtab.sty which are used to format equations
 % and tables, respectively. The MDWtools set is already installed on most
@@ -136,8 +138,8 @@
 
 
 
-%\usepackage[caption=false]{caption}
-%\usepackage[font=footnotesize]{subfig}
+\usepackage{caption}
+\usepackage[font=footnotesize]{subfig}
 % subfig.sty, also written by Steven Douglas Cochran, is the modern
 % replacement for subfigure.sty. However, subfig.sty requires and
 % automatically loads Axel Sommerfeldt's caption.sty which will override
@@ -228,12 +230,15 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Bare Demo of IEEEtran.cls for Conferences}
+\title{Performance and Scalability Evaluation of \\Ceph Parallel File System}
 
 
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
+
+\begin{comment}
+
 \author{\IEEEauthorblockN{Michael Shell}
 \IEEEauthorblockA{School of Electrical and\\Computer Engineering\\
 Georgia Institute of Technology\\
@@ -250,6 +255,8 @@ Email: homer@thesimpsons.com}
 San Francisco, California 96678-2391\\
 Telephone: (800) 555--1212\\
 Fax: (888) 555--1212}}
+
+\end{comment}
 
 % conference papers do not typically use \thanks and this command
 % is locked out in conference mode. If really needed, such as for
@@ -285,20 +292,7 @@ Fax: (888) 555--1212}}
 % make the title area
 \maketitle
 
-
-\begin{abstract}
-%\boldmath
-The abstract goes here.
-\end{abstract}
-% IEEEtran.cls defaults to using nonbold math in the Abstract.
-% This preserves the distinction between vectors and scalars. However,
-% if the conference you are submitting to favors bold math in the abstract,
-% then you can use LaTeX's standard command \boldmath at the very start
-% of the abstract to achieve this. Many IEEE journals/conferences frown on
-% math in the abstract anyway.
-
-% no keywords
-
+\input{abstract}
 
 
 
@@ -312,27 +306,15 @@ The abstract goes here.
 % creates the second title. It will be ignored for other modes.
 \IEEEpeerreviewmaketitle
 
+\input{introduction}
+\input{testbed}
+\input{baseline}
+\input{ceph-initial}
+\input{ceph-tuning}
+\input{ceph-meta}
+\input{conclusion}
 
 
-\section{Introduction}
-% no \IEEEPARstart
-This demo file is intended to serve as a ``starter file''
-for IEEE conference papers produced under \LaTeX\ using
-IEEEtran.cls version 1.7 and later.
-% You must have at least 2 lines in the paragraph with the drop letter
-% (should never be an issue)
-I wish you the best of success.
-
-\hfill mds
- 
-\hfill January 11, 2007
-
-\subsection{Subsection Heading Here}
-Subsection text here.
-
-
-\subsubsection{Subsubsection Heading Here}
-Subsubsection text here.
 
 
 % An example of a floating figure using the graphicx package.
@@ -419,13 +401,8 @@ Subsubsection text here.
 
 
 
-\section{Conclusion}
-The conclusion goes here.
 
 
-
-
-% conference papers do not normally have an appendix
 
 
 % use section* for acknowledgement
@@ -453,25 +430,12 @@ The authors would like to thank...
 % http://www.ctan.org/tex-archive/biblio/bibtex/contrib/doc/
 % The IEEEtran BibTeX style support page is at:
 % http://www.michaelshell.org/tex/ieeetran/bibtex/
-%\bibliographystyle{IEEEtran}
+
+\bibliographystyle{IEEEtran}
 % argument is your BibTeX string definitions and bibliography database(s)
-%\bibliography{IEEEabrv,../bib/paper}
-%
-% <OR> manually copy in the resultant .bbl file
-% set second argument of \begin to the number of references
-% (used to reserve space for the reference number labels box)
-\begin{thebibliography}{1}
+% \bibliography{IEEEabrv,../bib/paper}
+\bibliography{IEEEabrv, paper}
 
-\bibitem{IEEEhowto:kopka}
-H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
-
-\end{thebibliography}
-
-
-
-
-% that's all folks
 \end{document}
 
 
