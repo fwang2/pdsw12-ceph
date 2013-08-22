@@ -1,0 +1,18 @@
+# 0.64 RADOS Bench replication testing dataset
+# rep - replication level
+# wr_with_journal - total write with journals
+# 4 MB I/O
+
+"rep",  "mode", "bw"
+"1", write,           5322.91
+"1", read,            8781.62
+"1", write_with_journal, 10645.82
+
+"2", write,           2211.75
+"2", read,            8602.01
+"2", write_with_journal, 8847
+
+"3", write,           1408.98
+"3", read,            8610.15
+"3", write_with_journal, 8453.88
+
