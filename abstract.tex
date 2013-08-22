@@ -1,16 +1,27 @@
 \begin{abstract}
 
-Ceph is designed to be a reliable and scalable fault tolerant parallel file
-system with a number of intriguing features. In collaboration with its major
-developer, Inktank Inc, we studied the feasibility of using Ceph for future
-HPC storage deployment. This paper presents our experiments, results and
-observations from mostly performance and scalability perspective. Our work
-made two unique contributions. First, this evaluation is performed under a
-realistic setup using state-of-the-art backend storage (Data Direct Network's
-SFA10K),  although typical in large-scale HPC environment, but atypical for
-average commercial off-the-shelf setup.  Second, our path of investigation,
-tuning efforts, and findings made a direct contribution to Ceph's development,
-it should also benefit community at large. Throughout the evaluation, we can
-see that Ceph is under fast-paced development and maturing with great promise. 
+%Ceph is designed to be a reliable and scalable fault tolerant parallel file
+%system with a number of intriguing features. 
+
+Ceph is an open-source and emerging distributed parallel file and storage
+system technology. It is designed to provide file system-level and object-level
+access to data. Ceph, by design, assumes running on unreliable and commodity
+storage and network hardware and provides reliability and fault-tolerance
+through pre-calculated and controlled object placement and data replication. 
+
+In collaboration with its major developer, Inktank Inc, we evaluated the Ceph
+technology for future high-performance computing (HPC) environments, like ours.
+This paper presents our evaluation methodology, experiments, results and
+observations from mostly parallel I/O performance and scalability perspectives.
+Our work made two unique contributions. First, our evaluation is performed
+under a realistic setup for a large-scale capability HPC environment like ours
+using a commercial high-end storage system (Data Direct Network's SFA10K).
+%although typical in large-scale HPC environment, but atypical for average
+%commercial off-the-shelf setup.  
+Second, our path of investigation, tuning efforts, and findings made direct
+contributions to Ceph's development and improved code quality, scalability, and
+performance. These changes should also benefit the Ceph and HPC community at
+large. Throughout the evaluation, we observed that Ceph still is an evloving
+technology and is under fast-paced development and maturing with great promise. 
 
 \end{abstract}
