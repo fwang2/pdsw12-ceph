@@ -1,4 +1,8 @@
-\section{Ceph RADOS Scaling: Initial Results}
+\section{Ceph Evaluation: Initial Results}
+\label{sec:ceph-initial}
+
+\subsection{Ceph RADOS Scaling}
+
 
 RADOS is a reliable distributed object store, the foundational component for
 CephFS file system. There are two types of scaling tests we are interested at
@@ -30,7 +34,7 @@ were run with replication set to one.  The backend file systems were XFS,
 BTRFS and EXT4 file systems were not tested at this time.
 
 
-\subsection{Scaling on number of OSDs per server}
+\subsubsection{Scaling on number of OSDs per server}
 
 In the following test, a single Ceph host drives $n$ OSDs, where $n$ increases
 from one to eleven. The result is illustrated in Figure~\ref{fig:osd-scale}.
@@ -55,7 +59,7 @@ provisioning more OSDs on the SFA10K backend.
 \label{fig:oss-scale}
 \end{figure}
 
-\subsection{Scaling on number of OSD servers}
+\subsubsection{Scaling on number of OSD servers}
 
 In this test, we exercise OSD servers from one to four, driven by four hosts
 each with four RADOS Bench process. Each additional OSD server
@@ -73,16 +77,13 @@ device. This effectively cuts the observed system bandwidth in half. That said,
 it does not explain the read performance -- it is a little better than write,
 but still far from the theoretical maximum.
 
-\section{Ceph File System Performance: Initial Test}
-\label{sec:ior-initial}
-We used the synthetic IOR benchmark suite for file system level performance and
-scalability test.
-The particular parameter setup is show in Table \ref{tbl:ior}. Each client node
-has 6 GB of physical memory, the block size is set so as to mitigate cache
-effects. In addition, the test harness program issues the following commands
-at the beginning of each test:
+\subsection{Ceph File System Performance}
 
-
+We used the synthetic IOR benchmark suite for file system level performance
+and scalability test.  The particular parameter setup is show in Table
+\ref{tbl:ior}. Each client node has 6 GB of physical memory, the block size is
+set so as to mitigate cache effects. In addition, the test harness program
+issues the following commands at the beginning of each test:
 
 
 \begin{table}[tb]

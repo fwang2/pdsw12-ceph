@@ -1,4 +1,7 @@
-\section{Improving RADOS Performance}
+\section{Tuning, Optimization and Improvements}
+\label{sec:ceph-tuning}
+
+\subsection{Improving RADOS Performance}
 
 \begin{figure}[h]
 \centering
@@ -29,7 +32,7 @@ increasing the size of various Ceph buffers and queues, enabling AIO journals,
 and increasing the number of OSD op threads.
 
 
-\subsection{Disable Cache Mirroring on Controllers}
+\subsubsection{Disable Cache Mirroring on Controllers}
 
 During a second round of test performed by Inktank, we noticed a dramatic drop
 on RADOS performance: even though write throughput on individual server met the
@@ -67,7 +70,7 @@ Figure~\ref{fig:rados-ddn-mirror-disabled}. With BTRFS, for example, we hit over
 Unfortunately, read performance did not scale as well.
 
 
-\subsection{Disable TCP autotuning}
+\subsubsection{Disable TCP autotuning}
 
 During these tests, a trend that previously had been seen became more
 apparent.  During reads, there were periods of high performance followed by
@@ -107,7 +110,7 @@ of this feature!
 %\includegraphics[width=5in]{rados-064-oss}
 %\end{figure}
 
-\subsection{Repeating RADOS Scaling Test}
+\subsubsection{Repeating RADOS Scaling Test}
 
 We now repeated the previous RADOS scaling tests with these improvements in place.
 The first test was done on a single node with RADOS Bench to see how close the
@@ -152,8 +155,8 @@ nodes}
 
 
 
-\section{Improving Ceph File System Performance}
-\label{sec:improve-ior}
+\subsection{Improving Ceph File System Performance}
+\label{sec:ceph-tuning-fs}
 
 The initial stability issues mentioned in Section~\ref{sec:ior-initial} are
 fixed by migrating from Ceph version 0.48/0.55 to 0.64, the latest stable version at the
@@ -176,7 +179,7 @@ performance degraded even further indicating some kind of contention either on
 the clients or on the OSD servers.
 
 
-\subsection{Disabling Client CRC32}
+\subsubsection{Disabling Client CRC32}
 
 At this point, we were able to both make more client nodes available for Ceph
 file system-level testing and also install a profiling tool called \verb!perf!
@@ -209,7 +212,7 @@ CRC32 processing should have already been using SSE4 instructions on Intel
 CPUs, this update will allow any user-land Ceph processes to process CRC32
 checksums with significantly less overhead.
 
-\subsection{Improving IOR Read Performance}
+\subsubsection{Improving IOR Read Performance}
 
 Deeper analysis with perf showed that there was heavy lock contention during
 parallel compaction in the Linux kernel memory manager.  This behavior was first
@@ -261,7 +264,7 @@ By installing a newer kernel, increasing read-ahead cache size, and increasing t
 client IOR processes, we were able to achieve very satisfactory I/O performance.
 
 
-\subsection{Repeating the IOR Scaling Test}
+\subsubsection{Repeating the IOR Scaling Test}
 
 As before, we ran IOR scaling tests with two cases: transfer size 4 KB and 4 MB.
 These results are illustrated in Figure~\ref{fig:ior-064}. As expected, we saw
