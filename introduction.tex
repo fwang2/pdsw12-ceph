@@ -2,7 +2,7 @@
 
 National Center for Computational Sciences (NCCS) runs one of the largest HPC
 storage system built on top of Lustre parallel file system. The latest
-installation of Spider II is designed to operate at over 1 TB/s peak
+installation of Spider II\cite{spider2} is designed to operate at over 1 TB/s peak
 throughput with 40 PB of raw capacity. As a scratch file system connected to a
 leadership computing platform at the scale of Titan, Spider II emphasizes
 \textit{capability} over \textit{capacity}. However, we also recognize that
@@ -47,16 +47,16 @@ experience.
 \end{itemize}
 
 As interesting and feature-rich as Ceph may be, our environment and the sheer
-scale of its potential application drive us to first look into its scalability
-and performance.  As part of the study, we set up a dedicated testbed within
-NCCS for the Ceph file system evaluation. The goal of our study is to
-investigate the feasibility of using the Ceph for our future HPC storage
-deployment. This paper presents our experience, results, and observations.
-While evaluating our results, please keep in mind that Ceph is still a
-relatively \textit{young} parallel file system and its code base is changing
-rapidly. In between releases, we often experienced different stability and
-performance outcomes.  We will try to make clear in the writing when such
-changes occurred.
+scale of its potential application drive us to first look into the all
+important scalability and performance aspect of it.  As part of the study, we
+set up a dedicated testbed within NCCS for the Ceph file system evaluation.
+The goal of our study is to investigate the feasibility of using the Ceph for
+our future HPC storage deployment. This paper presents our experience,
+results, and observations.  While evaluating our results, please keep in mind
+that Ceph is still a relatively \textit{young} parallel file system and its
+code base is changing rapidly. In between releases, we often experienced
+different stability and performance outcomes.  We will try to make clear in
+the writing when such changes occurred.
 
 This paper is organized as follows. Section~\ref{sec:testbed} gives an
 overview on our general test and evaluation methodology as well as testbed
