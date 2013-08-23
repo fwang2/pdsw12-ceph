@@ -32,6 +32,8 @@ increasing the size of various Ceph buffers and queues, enabling AIO journals,
 and increasing the number of OSD op threads.
 
 
+\begin{comment}
+
 \subsubsection{Disable Cache Mirroring on Controllers}
 
 During a second round of test performed by Inktank, we noticed a dramatic drop
@@ -69,6 +71,8 @@ Figure~\ref{fig:rados-ddn-mirror-disabled}. With BTRFS, for example, we hit over
 11 GB/s to the disks and very close to what the DDN chassis is capable of doing. 
 Unfortunately, read performance did not scale as well.
 
+\end{comment}
+
 
 \subsubsection{Disable TCP autotuning}
 
@@ -89,8 +93,9 @@ Figure~\ref{fig:rados-tcp-auto-disabled}.
 
 Luckily, the fix was fairly straight forward by issuing the following command on all nodes:
 
-\begin{Verbatim}
-     echo 0 | sudo tee /proc/sys/net/ipv4/tcp_moderate_rcvbuf
+\begin{Verbatim}[fontsize=\small]
+ echo 0 | sudo tee 
+   /proc/sys/net/ipv4/tcp_moderate_rcvbuf
 \end{Verbatim}
 
 Recent versions of Ceph work around this issue by manually controlling the TCP
@@ -188,8 +193,9 @@ Profiling with \verb!perf! showed high CPU utilization on test clients due to
 crc32c processing in the Ceph kernel client.  crc32 checksums can be disabled
 by changing the CephFS mount options:
 
-\begin{Verbatim}
-mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o name=admin,nocrc
+\begin{Verbatim}[fontsize=\small]
+mount -t ceph 10.37.248.43:6789:/ 
+    /mnt/ceph -o name=admin,nocrc
 \end{Verbatim}
 
 
@@ -240,9 +246,11 @@ write performance, read performance improved dramatically.  In addition to the
 kernel change, Sage Weil from InkTank suggested increasing the amount of CephFS
 client kernel read-ahead cache size as:
 
-\begin{Verbatim}[samepage=true]
-mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
-   name=admin,nocrc,readdir_max_bytes=4104304,readdir_max_entries=8192
+\begin{Verbatim}[samepage=true, fontsize=\small]
+mount -t ceph 10.37.248.43:6789:/ 
+  /mnt/ceph -o name=admin,nocrc,
+  readdir_max_bytes=4104304,
+  readdir_max_entries=8192
 \end{Verbatim}
 
 %% SCOTT - is figure 15 IOR over Ceph and 14 is RADOS bench? If so, can we
@@ -291,4 +299,26 @@ around 5.2 GB/s (which is roughly what we would expect).  Reads seem to be
 topping out anywhere from 5.6-7 GB/s, however it is unclear if read performance
 would continue scaling with more clients and get closer to ~8 GB/s  we
 obervered with RADOS Bench.
+
+\subsection{Revisit Metadata Performance}
+
+Our previous results show that file creation rate is significantly lower than
+directory creation rate. Also, we conjectured two reasons: one is the file
+creation is associated with 1 MB data write and followed by a fsync operation.
+Another reason being that we obtained above results from early version of Ceph
+without all the tunings and improvement applied. 
+
+Therefore, we repeated the same test on the latest CephFS 0.64. The result is
+illustrated in Figure~\ref{fig:mdtest-064-file-create}. As expected, we
+observed a significant improvement on the file creation rate. We also note
+that as number of clients increase, the file creation rate decreases rapidly,
+which suggested some form of lock contention. This presents some interesting
+issues to be investigated further.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=3.5in]{mdtest-064-file-create}
+\caption{mdtest of file creation on Ceph 0.64}
+\label{fig:mdtest-064-file-create}
+\end{figure}
 
