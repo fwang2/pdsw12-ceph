@@ -1,3 +1,7 @@
+
+
+# Documents
+
 ## Pre-requisite:
 
     MacTex package
@@ -14,7 +18,6 @@
     make paper
 
 
-
 ## For both version
 
     make
@@ -22,6 +25,15 @@
 ## Clean up the generated junk
 
     make clean
+
+
+# Experiment Notes
+
+## xdd sweep test
+
+    /ccs/techint/home/fwang2/ceph-report/src/xdd-run.py
+
+
 
 
 ## Sweep Test program:
