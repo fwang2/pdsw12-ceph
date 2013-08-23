@@ -76,7 +76,7 @@ Inktank Inc, prepared this performance and scalability study of
 Ceph file system. Ceph originated from Sage Weil's PhD research
 at UC Santa Cruz around 2007 and it was designed to be a reliable, scalable
 fault-tolerant parallel file system. Inktank is now the major developer behind
-the open-source parallel file system to sheperd its development and provide
+the open-source parallel file system to shepherd its development and provide
 commercial support.
 
 In comparison to other parallel file systems, Ceph has a number of distinctive
@@ -142,7 +142,7 @@ Figure~\ref{fig:ddn-sfa10k}.
 Our Ceph testbed employs a collection of testing nodes. These nodes and their
 roles are summarized in Table~\ref{tbl:ceph-test-nodes}. In the following
 discussion, we use ``servers'', ``osd servers'', ``server hosts''
-interchangably. We will emphasize with ``client'' prefix when we want to
+interchangeably. We will emphasize with ``client'' prefix when we want to
 distinguish it from above.
 
 \begin{table}[H]
@@ -371,7 +371,7 @@ each with four RADOS Bench process. Each additional OSD server
 adds eleven more OSDs into play. We observe that Ceph exhibits linear scaling with
 regard to number of servers as well, at least in the given set of servers.
 However, the peak performance we are seeing is about the half of what are
-expecting from the SFA10K (compare to the baseline block I/O perforamnce number
+expecting from the SFA10K (compare to the baseline block I/O performance number
 presented in Section~\ref{sec:block-io}).
 
 For writes, the lost performance is attributed to the way Ceph performs
@@ -773,7 +773,7 @@ improving with respect to increasing number of clients.  Writes seem to be toppi
 around 5.2 GB/s (which is roughly what we would expect).  Reads seem to be
 topping out anywhere from 5.6-7 GB/s, however it is unclear if read performance
 would continue scaling with more clients and get closer to ~8 GB/s  we
-obervered with RADOS Bench.
+observed with RADOS Bench.
 
 
 \section{Metadata Performance}
@@ -847,7 +847,7 @@ file creation operation, it is likely due to lack of workload stress on MDS.
 \end{itemize}
 
 
-The results also show that file creation rate is signficantly lower than
+The results also show that file creation rate is significantly lower than
 directory creation rate. We stipulated two contributing factors: one is the file
 creation is associated with 1 MB data write and followed by a fsync operation,
 which is a rather heavy weight operation compare to directory creation. Another
@@ -915,7 +915,7 @@ mount -t ceph 10.37.248.43:6789:/ /mnt/ceph -o
 \addcontentsline{toc}{section}{Appendix C - CRUSH map}
 
 This crush map is just an example of full OSD mapping. As we create and
-re-create different testbed subests with different OSD configurations, the map will
+re-create different testbed setups with different OSD configurations, the map will
 change accordingly.
 
 \input{crush.txt}
