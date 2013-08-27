@@ -1,21 +1,30 @@
 \section{Introduction}
 
-National Center for Computational Sciences (NCCS) runs one of the largest HPC
-storage system built on top of Lustre parallel file system. The latest
-installation of Spider II\cite{spider2} is designed to operate at over 1 TB/s peak
-throughput with 40 PB of raw capacity. As a scratch file system connected to a
-leadership computing platform at the scale of Titan, Spider II emphasizes
-\textit{capability} over \textit{capacity}. However, we also recognize that
-there are a wide variety of scientific data and workloads with different
-performance and data access requirements, e.g., RESTful interface, S3-like
-API, cloud solution integration, to name a few. 
+Oak Ridge Leadership Computing Facility (OLCF) at Oak Ridge National Laboratory
+(ORNL) has a long history of deploying and running very-large-scale
+high-performance computing (HPC) systems~\cite{top500-ornl}. The facility
+hosted the Jaguar supercomputer up until recently, which was upgraded to the
+Titan supercomputer. In order to satisfy the I/O demand of such supercomputers
+(as well as, other OLCF computational, analysis, and visualization clusters),
+OLCF also hosts large-scale file and storage systems. Lustre has been OLCF's
+choice as the distributed parallel file system.  The latest incarnation of such
+large-scale file systems hosted at OLCF is Spider II\cite{spider2}. Spider II
+is the forklift-upgrade of its predecessor, Spider, which was deployed in 2008.
+Spider II, deployed in 20013, is designed to operate at over 1 TB/s peak
+aggregate I/O throughput and has a 40 PB of raw disk capacity. As the scratch
+file system connected to a leadership computing platform at the scale of Titan,
+Spider II emphasizes \textit{capability} over \textit{capacity}. However, we
+also recognize that there are a wide variety of scientific data and workloads
+with different performance and data access requirements (e.g., RESTful
+interface, S3-like API, cloud solution integration) which might not be
+efficiently serviced by Lustre. OLCF is constantly evaluating new and emerging
+file and storage system technologies.  
 
 Ceph\cite{Weil:2006:Ceph} originated from Sage Weil's PhD research at UC Santa
 Cruz at 2007 and it was designed to be a reliable, scalable fault-tolerant
-parallel file system.  Inktank is now the major developer behind the
-open-source parallel file system to shepherd its development and provide
-commercial support.  In comparison to other parallel file systems, Ceph has a
-number of distinctive features:
+parallel file system.  Since then, Ceph has been open-sourced and Inktank is
+now the major developer behind it.  In comparison to other parallel file
+systems, Ceph has a number of distinctive features:
 
 \begin{itemize}
  
@@ -24,9 +33,9 @@ number of distinctive features:
   placement and layout while taking into consideration of failure domains and
   hierarchical storage tiers.
   
-  \item From the start, Ceph's design anticipated managing metadata and the
-  name space with a cluster of metadata servers. It utilized a dynamic subtree
-  partitioning strategy to continuously adapt metadata distribution to current
+  \item From the start, Ceph's design anticipated managing meta data and the
+  name space with a cluster of meta data servers. It utilized a dynamic subtree
+  partitioning strategy to continuously adapt meta data distribution to current
   demands.
 
   \item Ceph's design assumes that the system is composed of unreliable
@@ -35,28 +44,27 @@ number of distinctive features:
   future directions of Exascale computing.
 
   \item Ceph is built on top of a unified object management layer, RADOS. Both
-  metadata and the file data can take advantage of this uniformity. On top of
+  meta data and the file data can take advantage of this uniformity. On top of
   RADOS, Ceph build and project a host of other features such as RESTful
   interface, S3 and Swift-compliant API, cloud integration.
 
-\item Most of the Ceph processes reside in user-space. Generally speaking, this makes the
-system easier to debug and maintain. The client-side support has long been
-integrated into Linux mainline kernel, which eases the deployment and out-of-box
-experience.
+  \item Most of the Ceph processes reside in user-space. Generally speaking,
+this makes the system easier to debug and maintain. The client-side support has
+long been integrated into Linux mainline kernel, which eases the deployment and
+out-of-box experience.
 
 \end{itemize}
 
-As interesting and feature-rich as Ceph may be, our environment and the sheer
-scale of its potential application drive us to first look into the all
-important scalability and performance aspect of it.  As part of the study, we
-set up a dedicated testbed within NCCS for the Ceph file system evaluation.
-The goal of our study is to investigate the feasibility of using the Ceph for
-our future HPC storage deployment. This paper presents our experience,
+As interesting and feature-rich as Ceph may be,  scalability and performance
+are our top priorities due to the unique requirements our environment.  As part
+of this study, we set up a dedicated testbed within OLCF to understand and
+evaluate Ceph.  Our goal was to investigate the feasibility of using the Ceph
+for our future HPC storage deployments. This paper presents our experience,
 results, and observations.  While evaluating our results, please keep in mind
 that Ceph is still a relatively \textit{young} parallel file system and its
 code base is changing rapidly. In between releases, we often experienced
-different stability and performance outcomes.  We will try to make clear in
-the writing when such changes occurred.
+different stability and performance outcomes.  We will try to make clear in the
+writing when such changes occurred.
 
 This paper is organized as follows. Section~\ref{sec:testbed} gives an
 overview on our general test and evaluation methodology as well as testbed
@@ -64,7 +72,7 @@ environment; Following it, Section~\ref{sec:baseline} establishes the baseline
 performance and expectations for all critical components on the data path;
 Section~\ref{sec:ceph-initial} discusses our early runs, results, and issues
 bottom up: from middle tier RADOS object layer to the file system-level and
-then metadata performance. In Section~\ref{sec:ceph-tuning} we highlight the
+then meta data performance. In Section~\ref{sec:ceph-tuning} we highlight the
 investigative and tuning effort, we compare results before and after, and how
 the process eventually bring the system performance to a respectable state.
 Finally, Section~\ref{sec:conclusion} summarizes our findings, observations,
