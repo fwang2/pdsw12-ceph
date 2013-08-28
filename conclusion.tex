@@ -14,10 +14,10 @@ processing overhead and we do not know yet if this would be significant.
   \item Ceph performs \textbf{metadata + data} journaling, which is fine for
 host systems that has locally attached disk. However, this presents a problem
 in DDN SFA10K-like hardware, where the backend LUNs are exposed as block
-devices through SCSI Request Protocol (SRP) over IB. The journaling write
-requires twice the bandwidth compare to Lustre-like metadata-only journaling
-mechanism. For Ceph to be viable in this facility, journaling operations will
-need to further design and engineering.
+devices through IB over SRP protocol. The journaling write requires twice the
+bandwidth compared to Lustre-like meta data-only journaling mechanism. For Ceph
+to be viable in large-scale capability HPC environments like ours, journaling
+operations will need to further design and engineering.
 
   \item We observed consistent results and linear scalability at the RADOS
 level. However, we did not observe the same at the file system level. We have

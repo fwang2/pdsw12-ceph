@@ -79,11 +79,12 @@ but still far from the theoretical maximum.
 
 \subsection{Ceph File System Performance}
 
-We used the synthetic IOR benchmark suite for file system level performance
-and scalability test.  The particular parameter setup is show in Table
-\ref{tbl:ior}. Each client node has 6 GB of physical memory, the block size is
-set so as to mitigate cache effects. In addition, the test harness program
-issues the following commands at the beginning of each test:
+We used the synthetic IOR benchmark
+suite\footnote{\url{http://sourceforge.net/projects/ior-sio/}} for file system
+level performance and scalability test.  The particular parameter setup is show
+in Table \ref{tbl:ior}. Each client node has 6 GB of physical memory, the block
+size is set so as to mitigate cache effects. In addition, the test harness
+program issues the following commands at the beginning of each test:
 
 
 \begin{table}[tb]
@@ -167,8 +168,9 @@ In our particular setup, we only had one metadata server (MDS) configured.
 Therefore, this is not a scalability test on the performance of Ceph clustered
 MDS, which would have been very interesting.  Instead, we focus on a single MDS
 performance and exercise it with up to 8 clients to observe the single MDS
-performance scaling. We used mdtest as our benchmark tool. Mdtest parameters
-used for this test are:
+performance scaling. We used
+mdtest\footnote{\url{http://sourceforge.net/projects/mdtest/}} as our benchmark
+tool. Mdtest parameters used for this test are:
 
 \begin{itemize}
 \item \verb!-w 1048576 -y!: for each created file, we write 1 MB data and

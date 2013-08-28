@@ -119,7 +119,7 @@ buffer size.
 We now repeated the previous RADOS scaling tests with these improvements in place.
 The first test was done on a single node with RADOS Bench to see how close the
 underlying object store could get to the node hardware limitations as the number
-of OSDs/LUNs used on the node increased. Note all the tests performed were against
+of OSDs/LUNs used on the node increased. All the tests performed were against
 XFS-formatted storage.
 
 %% SCOTT - the title in the figure needs to change IO to I/O
@@ -130,15 +130,16 @@ XFS-formatted storage.
 \begin{figure}[htb]
 \centering
 \includegraphics[width=3.5in]{rados-064-osd}
-\caption{RADOS Bench Scaling on \# of OSD, Ceph 0.64, 4 MB I/O, 8 Client Nodes}
+\caption{RADOS Bench Scaling on number of OSD, Ceph 0.64, 4 MB I/O, 8 Client Nodes}
 \label{fig:rados-064-osd}
 \end{figure}
 
 In the single server case as shown in Figure~\ref{fig:rados-064-osd}, ``Writes
-(including Journals)'' refers to how much data is actually being written out the
-DDN chasis, and blue line is how much data the clients are writing.
-We observe that performance gets very close to the hardware limits at roughly 9
-OSDs per server and then mostly levels out.
+(including Journals)'' refers to how much data is actually being written out
+the DDN SFA10K (observed directly from the controllers), and blue line is how
+much data the clients are writing.  We observe that performance observed by the
+DDN controllers gets very close to the hardware limits at roughly 9 OSDs per
+server and then mostly levels out.
 
 We also repeated tests looking at RADOS Bench performance as the number of OSD
 server nodes increases from one to four. The results are summarized in
@@ -189,7 +190,7 @@ At this point, we were able to both make more client nodes available for Ceph
 file system-level testing and also install a profiling tool called \verb!perf!
 that is extremely useful for profiling both kernel and user space codes.
 Profiling with \verb!perf! showed high CPU utilization on test clients due to
-crc32c processing in the Ceph kernel client.  crc32 checksums can be disabled
+CRC32c processing in the Ceph kernel client.  CRC32 checksums can be disabled
 by changing the CephFS mount options:
 
 \begin{Verbatim}[fontsize=\small]
@@ -219,7 +220,7 @@ checksums with significantly less overhead.
 
 \subsubsection{Improving IOR Read Performance}
 
-Deeper analysis with perf showed that there was heavy lock contention during
+Deeper analysis with \verb!perf! showed that there was heavy lock contention during
 parallel compaction in the Linux kernel memory manager.  This behavior was first
 observed roughly in the kernel 3.5 time frame which was the kernel
 installed on our test systems.\footnote{For more information,
@@ -242,8 +243,8 @@ Figure~\ref{fig:rados-kernel}.
 
 As can be seen, with the 3.9 kernel, while there was a slight improvement on
 write performance, read performance improved dramatically.  In addition to the
-kernel change, Sage Weil from InkTank suggested increasing the amount of CephFS
-client kernel read-ahead cache size as:
+kernel change, the amount of CephFS
+client kernel read-ahead cache size was improved as:
 
 \begin{Verbatim}[samepage=true, fontsize=\small]
 mount -t ceph 10.37.248.43:6789:/ 
@@ -267,16 +268,17 @@ size}
 \end{figure}
 
 
-By installing a newer kernel, increasing read-ahead cache size, and increasing the number of
-client IOR processes, we were able to achieve very satisfactory I/O performance.
+By installing a newer kernel, increasing read-ahead cache size, and increasing
+the number of client IOR processes, we were able to achieve very satisfactory
+I/O performance at the Ceph file system-level.
 
 
 \subsubsection{Repeating the IOR Scaling Test}
 
-As before, we ran IOR scaling tests with two cases: transfer size 4 KB and 4 MB.
-These results are illustrated in Figure~\ref{fig:ior-064}. As expected, we saw
-saw  improved read and write performance. These new read and write performance are in
-line with observed RADOS bench performance.
+As before, we ran IOR scaling tests with two cases: transfer size 4 KB and 4
+MB.  These results are illustrated in Figure~\ref{fig:ior-064}, respectively.
+As expected, we saw saw  improved read and write performance. These new read
+and write performance are in line with observed RADOS bench performance.
 
 %% SCOTT - Can we use the same Y axis for these figures? Any comment from Inktank
 %% as to why 4 KB performance is better than 4 MB performance?
@@ -289,23 +291,24 @@ line with observed RADOS bench performance.
 \label{fig:ior-064}
 \end{figure}
 
-Throughout our IOR testing, we observed that the average write throughput is 
+Throughout our IOR testing, we observed that the average write throughput is
 lower than the maximum.  This behavior was observed during other tests as well,
 indicating that we may have periods of time where write throughput is
 temporarily degrading.  Despite these issues, performance generally seems to be
-improving with respect to increasing number of clients.  Writes seem to be topping out at
-around 5.2 GB/s (which is roughly what we would expect).  Reads seem to be
+improving with respect to increasing number of clients.  Writes seem to be
+topping out at around 5.2 GB/s (which is roughly what we would expect due to
+journalling effectively halving the write performance).  Reads seem to be
 topping out anywhere from 5.6-7 GB/s, however it is unclear if read performance
-would continue scaling with more clients and get closer to ~8 GB/s  we
-obervered with RADOS Bench.
+would continue scaling with more clients and get closer to ~8 GB/s we observed 
+with RADOS Bench.
 
-\subsection{Revisit Metadata Performance}
+\subsection{Revisiting Metadata Performance}
 
 Our previous results show that file creation rate is significantly lower than
 directory creation rate. Also, we conjectured two reasons: one is the file
-creation is associated with 1 MB data write and followed by a fsync operation.
-Another reason being that we obtained above results from early version of Ceph
-without all the tunings and improvement applied. 
+creation is associated with 1 MB data write and followed by a \verb!fsync!
+operation.  Another reason being that we obtained above results from early
+version of Ceph without all the tunings and improvement applied. 
 
 Therefore, we repeated the same test on the latest CephFS 0.64. The result is
 illustrated in Figure~\ref{fig:mdtest-064-file-create}. As expected, we
