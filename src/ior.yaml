@@ -1,0 +1,45 @@
+cluster:
+    head: spoon37
+    servers: tick-oss1,tick-oss2,tick-oss3,tick-oss4
+    #clients: spoon28,spoon29,spoon30,spoon31,spoon37,spoon38,spoon39,spoon40
+    clients: spoon28,spoon29,spoon30,spoon31,spoon37,spoon38,spoon39,spoon40
+    start: 1
+    mds: tick-mds1
+    mons: spoon41
+    osds_per_node: 11
+    fs: xfs
+    mkfs_opts: -f -i size=2048 
+    mount_opts: -o inode64,noatime
+    outdir: /chexport/users/fwang2/ior-data
+
+ior:
+
+    # IOR -a POSIX -e -F -b $BSIZE -t 1m -r -w -C -i 3 -d 5 -o
+    # /mnt/cephfs/tfile
+
+    # -e perform fsync upon POSIX write close
+    # -F file per process
+    # -C change task ordering
+    # -i iteration number
+    # -d delay seconds
+
+    #bsize: 16g
+    #tsize: 4k, 8k, 16k, 32k, 64k, 128k, 256k, 512k, 1m, 2m, 4m
+
+    bsize: 8g
+    tsize: 4k 
+    outdir: /mnt/cephfs/tfile
+    flags: -a POSIX -e -F -r -w -C -d 5 -i 2 
+
+mpi:
+
+# none at this point
+
+mdtest:
+
+    unique: -u
+    nfiles: 1000
+    fsize: 1048576
+    dir: /mnt/cephfs/tmp1
+    iteration: 5
+
