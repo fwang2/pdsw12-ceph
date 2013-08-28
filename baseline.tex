@@ -1,11 +1,58 @@
-\section{Baseline Performance}
+\section{Establishing A Baseline Performance}
 \label{sec:baseline}
 
 \subsection{Block I/O over Native IB} 
 
-We first established baseline performance by measuring block I/O performance.
-At the block-level, with each LUN configured as a RAID6 8+2 array, we had the
-following results as shown in Table~\ref{tbl:block-io-baseline}.
+The lowest layer in the system are the exposed LUNs to the server hosts from
+the RAID controllers.  These LUNs are mostly configured as a RAID6 8+2 array (8
+data disks and 2 \textit{P} and \textit{Q} disks). In our earlier tests we
+observed that a 7.2K RPM SAS disk can perform at ~140 MB/s for 128 kB
+sequential I/O requests and a 7.2K RPM SATA disk can do ~36 MB/s. For these
+tests, all disk caches were turned off. Therefore, in 8 data disk RAID group
+with 1 MB sequential I/O requests (each disks sees 128 kB chunks of the
+request) the expected aggregate performance would be ~1.12 GB/s for a SAS RAID
+group and ~288 MB/s for a SATA RAID group, if there are no caches along the I/O
+path.  With the caches turned on, especially the write-back cache on the DDN
+RAID controller, we observe a significant performance improvement. In our
+day-to-day HPC operations we run our storage systems with write-back cache
+turned on on RAID controllers, if and only if, there is a method of
+cache-mirroring between the two active-active RAID controllers to recover from
+a single controller failure scenario. With the write-back cache on we observe
+~1.4 GB/s per RAID 6 8+2 SAS group and ~955 MB/s per RAID 6 8+2 SATA group, for
+1 MB sequential I/O. These two performance numbers will be used as a baseline
+in our study and they are presented in Table~\ref{tbl:block-io-baseline}.  For
+these tests, the 8+2 RAID 6 groups are exported to the server hosts using SCSI
+RDMA Protocol (SRP) over IB protocol (which is the default for our normal HPC
+configurations). For a SATA disk group this translates into roughly 120
+MB/s/disk and for a SAS disk group it is 175 MB/s. As can be seen, SATA RAID
+groups benefit from caching more than SAS groups. 
+
+For above tests the RAID groups are exported over physical 4x IB QDR links.
+These links can provide up to 40 Gbits/s signalling rate and 32 Gbits/s actual
+data rate (reduction is due to 8/10 encoding scheme). Therefore, each IB QDR
+link can perform at 3.2 GB/s, while in practice we see around 3 GB/s as the
+best case. 
+
+As mentioned earlier, we had 280 SATA disks and 200 SAS disks. Organizing these
+into RAID 6 8+2 groups will yield 28 SATA and 20 SAS RAID 6 8+2 groups. We had
+4 server hosts in our testbed and evenly distributing these on to 4 server
+hosts translates into 8 SATA LUNs and 4 SAS LUNs per server host (when a RAID
+group is exported to a server host, it is labeled as a LUN from the server host
+point of view).
+
+Next, we established the baseline performance for a single server host. We
+exercised all seven SATA LUNs concurrently form a single server host at the
+block-level. This resulted in an aggregate performance of roughly 2.6 GB/s.
+Repeating the same test using only four SAS LUNs yielded around 2.8 GB/s
+aggregate performance for 1 MB sequential I/O. These two numbers will be used
+as single server host aggregate baseline performance for this study. These are
+also presented in presented in Table~\ref{tbl:block-io-baseline}. 
+
+It is worth mentioning that we used our in-house developed synthetic benchmark,
+\textit{fair-lio} for all our block-level testing.  fair-lio has better
+sequential I/O characteristics compared to commonly used XDD benchmark and it
+is asynchronous and based on the Linux libaio library.
+
 
 \begin{table}[htb]
 \centering
@@ -22,22 +69,27 @@ following results as shown in Table~\ref{tbl:block-io-baseline}.
 \end{tabular}
 \end{table}
 
-Single host in this table refers to one of four tick-oss nodes. Four tick-oss
-nodes drive the SFA10K backend storage. Overall, we observe that the entire
-system can perform at 11 GB/s, compared to DDN SFA10K's theoretical maximum of
-12 GB/s.
+When exercising all 28 SATA LUNs from all four server hosts in parallel, we
+observed an 11 GB/s aggregate performance. Same level of performance was
+observed using all 20 SAS LUNs from four server hosts in parallel. Comparing
+these to the advertised peak performance of 12 GB/s of the DDN SFA10K, we
+concluded that our test setup is well configured to drive the backend disk
+system at full performance and we are limited by the RAID controller
+performance. Going forward in this study, 11 GB/s will be used the peak
+baseline for the entire test configuration.
 
 
-\subsection{IP over IB}
+\subsection{Establishing an IP over IB Baseline Performance}
 
 Ceph uses the BSD Sockets interface in \texttt{SOCK\_STREAM} mode (i.e., TCP).
-Because our entire testbed is IB-switched, we used IP over IB (IPoIB) for
-networking\footnote{As of writing of this report, Inktank is investigating using
-rsockets to improve performance with IB fabric}. Through simple
-\verb!netperf! tests, we observed that a pair of hosts connected by IB QDR using
-IPoIB can transfer data at 2.7 GB/s (the hosts are tuned per recommendations
-from Mellanox). With all four hosts (OSD servers), we expect the aggregate
-throughput to be in the neighborhood of 10 GB/s.
+Because our entire testbed is built on IB QDR fabric (including client to
+server host connections over a 108-port Mellanox IB QDR switch), we used IP
+over IB (IPoIB) for networking\footnote{As of writing of this report, Inktank
+is investigating using rsockets to improve performance with IB fabric}. Through
+simple \verb!netperf! tests, we observed that a pair of hosts connected by IB
+QDR using IPoIB can transfer data at 2.7 GB/s (the hosts are tuned per
+recommendations from Mellanox). With all four server hosts (OSD servers), we
+expect the aggregate throughput to be in the neighborhood of 11 GB/s.
 
 Unfortunately there was not enough time to do more detailed analysis of the
 network performance. However, as we observed later, RADOS is performing no
