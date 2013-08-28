@@ -20,11 +20,10 @@ included as of the Ceph Cuttlefish release, v0.61).  The two biggest
 improvements resulted from disabling CRC32c checksums and increasing the OSD
 count on the server.  With these changes, we are seeing better results.
 
-We ran a script written by Inktank for internal Ceph testing to perform
-sweeps over Ceph configuration parameters to examine how different
-tuning options affect performance on the DDN platform. The result of this
-parameter probing is illustrated in Figure~\ref{fig:parametric}. Please refer
-to Appendix E for explanations of these probed parameters.
+We swept over Ceph configuration parameters to examine how different tuning
+options affect performance on the DDN platform. The result of this parameter
+probing is illustrated in Figure~\ref{fig:parametric}. Please refer to Appendix
+E for explanations of these probed parameters.
 
 
 As a result of this testing, we improved performance slightly by
@@ -76,22 +75,23 @@ Unfortunately, read performance did not scale as well.
 
 \subsubsection{Disable TCP autotuning}
 
-During these tests, a trend that previously had been seen became more
-apparent.  During reads, there were periods of high performance followed by
-periods of low performance or outright stalls that could last for up to 20
-seconds at a time.  After several hours of diagnostics, Inktank observed that
-outstanding operations on the clients were not being shown as outstanding on
-the OSDs.  This appeared to be very similar to a problem Jim Schutt at Sandia
-National labs encountered with TCP autotuning in the Linux
+During these tests, a trend that previously had been seen became more apparent.
+During reads, there were periods of high performance followed by periods of low
+performance or outright stalls that could last for up to 20 seconds at a time.
+After running diagnostics, we observed that outstanding operations on the
+clients were not being shown as outstanding on the OSDs.  This appeared to be
+very similar to a problem Jim Schutt at Sandia National labs encountered with
+TCP autotuning in the Linux
 kernel.\footnote{\url{http://marc.info/?l=ceph-devel&m=133009796706284&w=2}}
-TCP auto tuning enables TCP window scaling by default and automatically
-adjusts the TCP receive window for each connection based on link conditions
-such as bandwidth delay product. We have observed this will make a notable
-improvement on Ceph read performance, as the results shown in
+TCP auto tuning enables TCP window scaling by default and automatically adjusts
+the TCP receive window for each connection based on link conditions such as
+bandwidth delay product. We have observed this improving the performance
+significantly on Ceph read operations, as the results shown in
 Figure~\ref{fig:rados-tcp-auto-disabled}.
 
 
-Luckily, the fix was fairly straight forward by issuing the following command on all nodes:
+Luckily, the fix was fairly straight forward by issuing the following command
+on all nodes:
 
 \begin{Verbatim}[fontsize=\small]
  echo 0 | sudo tee 
@@ -99,8 +99,7 @@ Luckily, the fix was fairly straight forward by issuing the following command on
 \end{Verbatim}
 
 Recent versions of Ceph work around this issue by manually controlling the TCP
-buffer size.  The testing at ORNL directly influenced and motivated the creation
-of this feature!
+buffer size.  
 
 \begin{figure}[htb]
 \centering

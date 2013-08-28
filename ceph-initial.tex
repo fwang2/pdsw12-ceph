@@ -173,18 +173,20 @@ used for this test are:
 \begin{itemize}
 \item \verb!-w 1048576 -y!: for each created file, we write 1 MB data and
 perform a sync operation.  This is a more realistic use case scenario than just
-open, close and removal sequence of metadata operations.
+open, close and unlink sequence of metadata operations.
 
-\item \verb!-n 1000!: Per client file \textit{and} directory workload. For eight
-clients, the total number of files and directories in the workload is 8,000. Since we did not specify
-either \verb!-D! or \verb!-F!, this is a mixture of both.
+\item \verb!-n 1000!: Per client file \textit{and} directory workload. For
+eight clients, the total number of files and directories in the workload is
+8,000. Since we did not specify either \verb!-D! (indicates a directory only
+workload) or \verb!-F! (indicates a file only workload), this is a mixture of
+both directory and file workloads.
 
 \item \verb!-d /mnt/cephfs/tmp!: we do specify a directory, but unlike under
 Lustre file system, where you can have single client multiple mounts (for
 increasing workload per client), here we just give the test an explicit home.
 
 \item \verb!-u!: without this option, we are exercising shared directory; with
-this option, we are exercising unique directories.
+this option, we are exercising unique directories per test client processes.
 
 \end{itemize}
 
@@ -217,11 +219,11 @@ We summarize the results as follows:
 operations for directories and files exhibit strong linear scaling. Same strong
 linear scaling is also observed for file read operations. 
 
-\item While the other operations seems unaffected or flat by the number of
-clients, it is not so if we zoom in, see \ref{fig:mdtest-fcreate} and
-\ref{fig:mdtest-dcreate}:  as number of clients increases, we observed the
-contention for shared directory. The performance degradation amount to 50\% or
-more.
+\item While the other operations seems unaffected or performance remains the
+same by the number of clients, it is not so if we zoom in, see
+figures \ref{fig:mdtest-fcreate} and \ref{fig:mdtest-dcreate}:  as number of clients
+increases, we observed the contention for shared directory. The performance
+degradation amount to 50\% or more.
 
 \item Though the same saturation (or degradation) trend was not observed for
 file creation operation, it is likely due to lack of workload stress on MDS.
