@@ -123,11 +123,16 @@ nodes}
 \label{sec:ceph-tuning-fs}
 
 The initial stability issues mentioned in Section~\ref{sec:ior-initial} are
-fixed by migrating from Ceph version 0.48/0.55 to 0.64, the latest stable version at the
-time of writing this report.  Upgrading to the latest stable Ceph release
-allowed us to run a full IOR parameter sweep for the first time since we
-started evaluating the performance and scalability of the Ceph file system.
-This is another sign of how much Ceph development is currently in flux.
+fixed by migrating from Ceph version 0.48/0.55 to 0.64, the latest stable
+version at the time of writing this report.  Upgrading to the latest stable
+Ceph release allowed us to run a full IOR parameter sweep for the first time
+since we started evaluating the performance and scalability of the Ceph file
+system.  This is another sign of how much Ceph development is currently in
+flux.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% removed for space
+
+\begin{comment}
 
 Another fix introduced by Ceph version 0.64 was in pool creation.  The default
 data pool used by previous Ceph version were set to 2x replication by mistake.
@@ -136,9 +141,12 @@ set the replication level to 1, which is the preferred value for a HPC
 environment like ours running on high-end and reliable storage backend hardware
 (e.g. DDN SFA10K).
 
-Even with these two changes in place, less-than-ideal write performance and
-very poor read performances were observed during our tests.  We also observed
-that by increasing the number of IOR processes per client node, the read
+\end{comment}
+
+
+Even with these changes in place, less-than-ideal write performance and very
+poor read performances were observed during our tests.  We also observed that
+by increasing the number of IOR processes per client node, the read
 performance degraded even further indicating some kind of contention either on
 the clients or on the OSD servers.
 
@@ -149,13 +157,17 @@ At this point, we were able to both make more client nodes available for Ceph
 file system-level testing and also install a profiling tool called \verb!perf!
 that is extremely useful for profiling both kernel and user space codes.
 Profiling with \verb!perf! showed high CPU utilization on test clients due to
-CRC32c processing in the Ceph kernel client.  CRC32 checksums can be disabled
-by changing the CephFS mount options:
+CRC32c processing in the Ceph kernel client.  
 
-\begin{Verbatim}[fontsize=\small]
-mount -t ceph 10.37.248.43:6789:/ 
-    /mnt/ceph -o name=admin,nocrc
-\end{Verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% removed
+
+%CRC32 checksums can be disabled
+%by changing the CephFS mount options:
+
+%\begin{Verbatim}[fontsize=\small]
+%mount -t ceph 10.37.248.43:6789:/ 
+%    /mnt/ceph -o name=admin,nocrc
+%\end{Verbatim}
 
 
 With client CRC32 disabled, we repeated the IOR tests. New results are shown in
@@ -189,7 +201,10 @@ please refer to \url{http://lwn.net/Articles/517082/} and
 
 We upgraded our test systems with kernel version 3.9 and performed RADOS Bench
 test.  The results were extremely positive and presented in
-Figure~\ref{fig:rados-kernel}.
+Figure~\ref{fig:rados-kernel}. As can be seen, with the 3.9 kernel, while
+there was a slight improvement on write performance, read performance improved
+dramatically.  In addition to the kernel change, the amount of CephFS client
+kernel read-ahead cache size was increased as well.
 
 
 \begin{figure}[htb]
@@ -202,17 +217,14 @@ Figure~\ref{fig:rados-kernel}.
 
 
 
-As can be seen, with the 3.9 kernel, while there was a slight improvement on
-write performance, read performance improved dramatically.  In addition to the
-kernel change, the amount of CephFS
-client kernel read-ahead cache size was improved as:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% REMOVED to save space
 
-\begin{Verbatim}[samepage=true, fontsize=\small]
-mount -t ceph 10.37.248.43:6789:/ 
-  /mnt/ceph -o name=admin,nocrc,
-  readdir_max_bytes=4104304,
-  readdir_max_entries=8192
-\end{Verbatim}
+%\begin{Verbatim}[samepage=true, fontsize=\small]
+%mount -t ceph 10.37.248.43:6789:/ 
+%  /mnt/ceph -o name=admin,nocrc,
+%  readdir_max_bytes=4104304,
+%  readdir_max_entries=8192
+% \end{Verbatim}
 
 %% SCOTT - is figure 15 IOR over Ceph and 14 is RADOS bench? If so, can we
 %% mention that 15 shows the filesystem performance?

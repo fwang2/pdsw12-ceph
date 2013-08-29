@@ -12,7 +12,7 @@ plot_xfs <- function(file) {
     xmin=as.integer(min(df$osd.num))
     xmax=as.integer(max(df$osd.num))
 
-    quartz(type="pdf", file="rados_osd.pdf")
+    quartz(type="pdf", file="rados_osd.pdf", width=10, height=7)
     theme_set(theme_bw(base_family="Lucida Grande", base_size=18))
     g = qplot(osd.num, bw,
             data=df,
@@ -21,13 +21,12 @@ plot_xfs <- function(file) {
             method=loess,
             # geom=c("point", "smooth"),
             ylab="Max (MB/s)\n",
-            xlab="\nNum of OSDs",
-            main="Single server, single client")
+            xlab="\nNum of OSDs")
     
     g = g + scale_shape_discrete(name="IO mode")
     g = g + scale_color_discrete(name="IO mode")
-    g = g + geom_point(size=3.5)
-    g = g + geom_line(size=1.5)
+    g = g + geom_point(size=9)
+    g = g + geom_line(size=3)
     
     # will (not) place lengend on the top
     g = g + opts(legend.position="top")

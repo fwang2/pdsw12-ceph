@@ -1,0 +1,12 @@
+# IOR test
+# no client CRC32
+# 1 process per client
+# 4 server nodes
+
+clients, mode, bw
+"1 client", Reads, 1166.47
+"1 client", Writes, 1588.63
+"4 clients", Reads, 513.97
+"4 clients", Writes, 5230.98
+"6 clients", Reads, 335.03
+"6 clients", Writes, 4997.84

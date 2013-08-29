@@ -1,0 +1,8 @@
+# 16 GB block size
+# 4 MB read ahead
+# 8 client nodes (8 processes each)
+# 
+Kernel, mode, bw
+"Kernel 3.9", Reads, 7499.88
+"Kernel 3.9", Writes, 5051.71
+

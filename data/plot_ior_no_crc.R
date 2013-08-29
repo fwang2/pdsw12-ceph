@@ -10,8 +10,10 @@ theme_set(theme_bw(base_family="Lucida Grande", base_size=18))
 
 
 g = ggplot(df, aes(x=clients, y=bw, fill=factor(mode))) +
-    geom_bar(stat="identity", position="dodge", color="black") +
-    scale_fill_brewer(type="qual", palette=1)
+    geom_bar(stat="identity", position="dodge", color="black", width=0.5) +
+    scale_fill_manual(values=c("greenyellow", "red"))
+
+    #scale_fill_brewer(type="qual", palette=1)
 
 
 
