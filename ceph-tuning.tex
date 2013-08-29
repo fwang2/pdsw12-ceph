@@ -1,4 +1,4 @@
-\section{Tuning, Optimization and Improvements}
+\section{Further Optimization and Improvements}
 \label{sec:ceph-tuning}
 
 \subsection{Improving RADOS Performance}
@@ -70,51 +70,6 @@ Figure~\ref{fig:rados-ddn-mirror-disabled}. With BTRFS, for example, we hit over
 11 GB/s to the disks and very close to what the DDN chassis is capable of doing. 
 Unfortunately, read performance did not scale as well.
 
-\end{comment}
-
-
-\subsubsection{Disable TCP autotuning}
-
-During these tests, a trend that previously had been seen became more apparent.
-During reads, there were periods of high performance followed by periods of low
-performance or outright stalls that could last for up to 20 seconds at a time.
-After running diagnostics, we observed that outstanding operations on the
-clients were not being shown as outstanding on the OSDs.  This appeared to be
-very similar to a problem Jim Schutt at Sandia National labs encountered with
-TCP autotuning in the Linux
-kernel.\footnote{\url{http://marc.info/?l=ceph-devel&m=133009796706284&w=2}}
-TCP auto tuning enables TCP window scaling by default and automatically adjusts
-the TCP receive window for each connection based on link conditions such as
-bandwidth delay product. We have observed this improving the performance
-significantly on Ceph read operations, as the results shown in
-Figure~\ref{fig:rados-tcp-auto-disabled}.
-
-
-Luckily, the fix was fairly straight forward by issuing the following command
-on all nodes:
-
-\begin{Verbatim}[fontsize=\small]
- echo 0 | sudo tee 
-   /proc/sys/net/ipv4/tcp_moderate_rcvbuf
-\end{Verbatim}
-
-Recent versions of Ceph work around this issue by manually controlling the TCP
-buffer size.  
-
-\begin{figure}[htb]
-\centering
-%\includegraphics[width=3.5in]{rados-after-ddn-tcptune}
-\includegraphics[width=3.5in]{autotune-disabled}
-\caption{Evaluating RADOS bench after TCP auto tuning disabled, 4 servers, 4
-clients, 4 MB I/O}
-\label{fig:rados-tcp-auto-disabled}
-\end{figure}
-
-
-
-%\begin{figure}[htb]
-%\includegraphics[width=5in]{rados-064-oss}
-%\end{figure}
 
 \subsubsection{Repeating RADOS Scaling Test}
 
@@ -159,6 +114,8 @@ scales nearly linearly for both reads and writes.
 nodes}
 \label{fig:rados-064-oss}
 \end{figure}
+
+\end{comment}
 
 
 
