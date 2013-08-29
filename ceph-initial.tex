@@ -76,7 +76,7 @@ clients, 4 MB I/O}
 \end{figure}
 
 
-
+\subsubsection{Scaling on number of OSDs per server}
 
 We also observed that using two or more client processes and many concurrent
 operations are important when performing these tests.  We tested eight client
@@ -85,9 +85,7 @@ for each RADOS Bench process to ensure that object reads come from independent
 pools (RADOS Bench is not smart enough to ensure that objects are not read by
 multiple processes and thus possibly cached).  A sync and flush is performed
 on every node before every test to ensure no data or metadata is in cache.
-All tests were run with replication set to one.  
-
-\subsubsection{Scaling on number of OSDs per server}
+All tests were run with replication set to one. 
 
 In the following test, a single Ceph host drives $n$ OSDs, where $n$ increases
 from one to eleven. The result is illustrated in Figure~\ref{fig:osd-scale}.
@@ -101,34 +99,36 @@ provisioning more OSDs on the SFA10K backend.
 \begin{figure}[!t]
 \centering
 \includegraphics[width=3in]{data/rados_osd}
-\caption{RADOS scaling on number of OSDs}
+\caption{RADOS scaling on number of OSDs: single server single client}
 \label{fig:osd-scale}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=3in]{data/rados_server}
-\caption{RADOS scaling on number of servers}
-\label{fig:oss-scale}
 \end{figure}
 
 \subsubsection{Scaling on number of OSD servers}
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=3in]{data/rados_server}
+\caption{RADOS scaling on number of servers, with 8 clients}
+\label{fig:oss-scale}
+\end{figure}
+
 In this test, we exercise OSD servers from one to four, driven by four hosts
-each with four RADOS Bench process. Each additional OSD server
-adds eleven more OSDs into play. We observe that Ceph exhibits linear scaling with
-regard to number of servers as well, at least in the given set of servers.
+each with four RADOS Bench process. Each additional OSD server adds eleven
+more OSDs into play. The results are illustrated in
+Figure~\ref{fig:oss-scale}. We notice that the read performance improved about
+10% given eight clients instead of four, but write performance is mostly flat
+for reason explained below. We also observe that Ceph exhibits linear scaling
+with regard to number of servers, at least in the given number of servers.
 However, the peak performance we are seeing is about the half of what are
-expecting from the SFA10K (compare to the baseline block I/O perforamnce number
-presented in Section~\ref{sec:block-io}).
+expecting from the SFA10K (compare to the baseline block I/O performance
+number presented in Section~\ref{sec:block-io}).
 
 For writes, the lost performance is attributed to the way Ceph performs
-journaling:
-Ceph does not support meta-data only journaling, therefore every write is the
-equivalent of a double-write: once to the data device, once to the journaling
-device. This effectively cuts the observed system bandwidth in half. That said,
-it does not explain the read performance -- it is a little better than write,
-but still far from the theoretical maximum.
+journaling: Ceph does not support meta-data only journaling, therefore every
+write is the equivalent of a double-write: once to the data device, once to
+the journaling device. This effectively cuts the observed system bandwidth in
+half. That said, it does not explain the read performance -- it is a little
+better than write, but still far from the theoretical maximum.
 
 \subsection{Ceph File System Performance}
 \label{sec:ior-initial}
