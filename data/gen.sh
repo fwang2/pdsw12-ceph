@@ -10,3 +10,8 @@ Rscript plotxdd.R xdd-write.csv write
 
 # generate RADOS bench result for different replication level
 Rscript plot_replication.R 
+
+Rscript plot_autotune.R rados-4s-4c-autotune-disabled.csv autotune-disabled.pdf
+Rscript plot_autotune.R rados-4s-4c-autotune-enabled.csv autotune-enabled.pdf
+
+Rscript plot_ior_no_crc.R ior_no_crc.pdf

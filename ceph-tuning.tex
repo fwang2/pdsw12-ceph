@@ -103,8 +103,10 @@ buffer size.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=3.5in]{rados-after-ddn-tcptune}
-\caption{Evaluating RADOS bench after TCP auto tuning disabled}
+%\includegraphics[width=3.5in]{rados-after-ddn-tcptune}
+\includegraphics[width=3.5in]{autotune-disabled}
+\caption{Evaluating RADOS bench after TCP auto tuning disabled, 4 servers, 4
+clients, 4 MB I/O}
 \label{fig:rados-tcp-auto-disabled}
 \end{figure}
 
@@ -204,7 +206,8 @@ in Figure~\ref{fig:ior-no-client-crc32}.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=3.5in]{ior-client-no-crc32}
+%\includegraphics[width=3.5in]{ior-client-no-crc32}
+\includegraphics[width=3.5in]{ior_no_crc}
 \caption{IOR test with disabling client-side CRC32}
 \label{fig:ior-no-client-crc32}
 \end{figure}
@@ -234,7 +237,8 @@ Figure~\ref{fig:rados-kernel}.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=3.5in]{rados-kernel-35vs39}
+%\includegraphics[width=3.5in]{rados-kernel-35vs39}
+\includegraphics[width=3.5in]{rados_kernel}
 \caption{RADOS bench: Linux kernel version 3.5 vs. 3.9}
 \label{fig:rados-kernel}
 \end{figure}
@@ -261,7 +265,8 @@ Figure~\ref{fig:ior-kernel-39}.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=3.5in]{ior-kernel-39}
+%\includegraphics[width=3.5in]{ior-kernel-39}
+\includegraphics[width=3.5in]{ior_kernel_change}
 \caption{CephFS performance with kernel changes to 3.9, IOR with 4 MB transfer
 size}
 \label{fig:ior-kernel-39}
