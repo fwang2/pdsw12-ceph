@@ -61,17 +61,23 @@ clients, 4 MB I/O}
 \end{figure}
 
 
-Luckily, the fix was fairly straight forward by issuing the following command
-on all nodes:
+Luckily, the fix was fairly straightforward by setting system parameter
+\url{/proc/sys/net/ipv4/tcp_moderate_rcvbuf} to zero on all nodes.  With this
+change in place, We have observed this improving the performance significantly
+on Ceph read operations. As shown in
+Figure~\ref{fig:rados-tcp-autotune-disabled}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REMOVED for space
+
+\begin{comment}
 
 \begin{Verbatim}[fontsize=\small]
  echo 0 | sudo tee 
    /proc/sys/net/ipv4/tcp_moderate_rcvbuf
 \end{Verbatim}
 
-With this change in place, We have observed this improving the performance
-significantly on Ceph read operations. As shown in
-Figure~\ref{fig:rados-tcp-autotune-disabled}.
+\end{comment}
 
 
 Recent versions of Ceph work around this issue by manually controlling the TCP
