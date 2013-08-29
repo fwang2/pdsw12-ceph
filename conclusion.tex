@@ -1,31 +1,33 @@
 \section{Observations and Conclusions}
 \label{sec:conclusion}
 
-Below are our preliminary observations from mostly performance perspective:
-
-\begin{itemize}
-
-  \item Ceph is built on the assumption that the underlying hardware components
+Ceph is built on the assumption that the underlying hardware components
 are unreliable, with little or no redundancy and failure detection capability.
 This assumption is not valid for high-end HPC centers like ours. We have
 disabled replication for pools, we haven't measured and quantified
 processing overhead and we do not know yet if this would be significant.
 
-  \item Ceph performs \textbf{metadata + data} journaling, which is fine for
-host systems that has locally attached disk. However, this presents a problem
-in DDN SFA10K-like hardware, where the backend LUNs are exposed as block
-devices through IB over SRP protocol. The journaling write requires twice the
-bandwidth compared to Lustre-like meta data-only journaling mechanism. For Ceph
-to be viable in large-scale capability HPC environments like ours, journaling
-operations will need to further design and engineering.
+Ceph performs \textbf{metadata + data} journaling, which is fine for host
+systems that have locally attached disks. However, this presents a problem in
+DDN SFA10K-like hardware, where the backend LUNs are exposed as block devices
+through IB over SRP protocol. The journaling write requires twice the
+bandwidth compared to Lustre-like meta data-only journaling mechanism. For
+Ceph to be viable in large-scale capability HPC environments like ours,
+journaling operations will need further design and more engineering efforts.
 
-  \item We observed consistent results and linear scalability at the RADOS
-level. However, we did not observe the same at the file system level. We have
-experienced large performance swings during different runs, very low read
-performance when transfer size is small, and I/O errors tend to happen when
-system is under stress (more clients and large transfer sizes). These are not
-particularly reproducible results, but it suggests that there are opportunities
-for code improvement and maturation.
+In our earlier tests, we experienced large performance swings during different
+runs, low read performance when transfer size is small, and I/O errors tend to
+happen when system is under stress (more clients and large transfer sizes).
+However, with systematic performance engineering and development efforts, we
+have seen a steady improvement through different releases. As of now, Ceph
+system on our testbed is able to perform close to 80\% of raw hardware
+capability at RADOS level and close to 70\% at file system level. This is
+still no comparison to Lustre yet, but by no means a small feat for such a
+\textit{young} technology. It is, in fact, a very respectable level of
+performance. 
 
-\end{itemize}
+%The current design on journaling write does present a challenge in
+%our IB-switched storage hardware. As BTRFS and other backend file system
+%mature, we are seeing promising signs for Ceph to take advantage for a
+%better journaling design.
 
