@@ -231,6 +231,21 @@
 \g@addto@macro\@verbatim\small
 \makeatother
 
+\usepackage{authblk}
+\renewcommand\Affilfont{\normalsize}
+\renewcommand\Authfont{\normalsize}
+\author[1]{Feiyi Wang}
+\author[2]{Mark Nelson}
+\author[1]{Sarp Oral}
+\author[1]{Scott Atchley}
+\author[2]{Sage Weil}
+\author[1]{Brad Settlemyer}
+\author[1]{Blake Caldwell}
+\author[1]{Jason Hill}
+
+\affil[1]{Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831}
+\affil[2]{Inktank Inc., Los Angeles, CA 90017}
+
 \begin{document}
 %
 % paper title
@@ -241,6 +256,7 @@
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
+
 
 \begin{comment}
 
@@ -412,11 +428,7 @@ Fax: (888) 555--1212}}
 % use section* for acknowledgement
 \section*{Acknowledgment}
 
-
-The authors would like to thank...
-
-
-
+The authors would like to thank Galen Shipman for initiating the effort.
 
 
 % trigger a \newpage just before the given reference
