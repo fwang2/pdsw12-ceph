@@ -33,17 +33,18 @@ services, including a block storage abstraction (RBD, or rados block device)
 and a cache-coherent distributed file system (CephFS).
 
 Data objects are distributed across storage daemons (ceph-osd) using
-CRUSH\cite{crush}, a deterministic hashing function that allows administrators
-to define flexible placement policies over a hierarchical cluster structure
-(e.g., disks, hosts, racks, rows, datacenters).  Because the location of
-objects can be calculated based on the object identifier and cluster layout
-(similar to consistent hashing~\cite{..}), there is no need for a metadata
-index or server for the RADOS object store. Further, because CRUSH provides an
-authoritative view of data placement, storage daemons can coordinate directly
-to handle data replications, recovery, or object migratation in the face of
-failure or cluster topology changes.  A small cluster of monitors (ceph-mon
-daemons) use Paxos to provide consensus on the current cluster layout, but do
-not need to explicitly coordinate migration or recovery activities.
+CRUSH\cite{Weil:2006:Crush}, a deterministic hashing function that allows
+administrators to define flexible placement policies over a hierarchical
+cluster structure (e.g., disks, hosts, racks, rows, datacenters).  Because the
+location of objects can be calculated based on the object identifier and
+cluster layout (similar to consistent hashing~\cite{karger1997consistent}),
+there is no need for a metadata index or server for the RADOS object store.
+Further, because CRUSH provides an authoritative view of data placement,
+storage daemons can coordinate directly to handle data replications, recovery,
+or object migration in the face of failure or cluster topology changes.  A
+small cluster of monitors (ceph-mon daemons) use Paxos to provide consensus on
+the current cluster layout, but do not need to explicitly coordinate migration
+or recovery activities.
 
 CephFS builds a distributed cache-coherent file system on top of the object
 storage service provided by RADOS.  Files are striped over objects stored and
@@ -64,11 +65,12 @@ directly to RADOS objects that contain the file data.  The metadata server
 cluster monitors the temperature of cached metadata and periodically adjusts
 the distribution of the namespace across the MDS cluster by migrating
 responsibility for arbitrary subtrees of the hierarchy between a dynamic pool
-of active ceph-mds daemons.  This dynamic subtree partitioning~\cite{..}
-strategy is both adaptive and highly scalable, allowing additional metadata
-server daemons to be added or removed at any time, making it ideally suited
-both for large-scale workloads with bursty workloads or general purpose
-clusters whose workloads grow or contract over time.
+of active ceph-mds daemons.  This dynamic subtree
+partitioning~\cite{Weil:2004:dynamic} strategy is both adaptive and highly
+scalable, allowing additional metadata server daemons to be added or removed
+at any time, making it ideally suited both for large-scale workloads with
+bursty workloads or general purpose clusters whose workloads grow or contract
+over time.
 
 \begin{comment}
 In comparison to other parallel file
