@@ -24,12 +24,56 @@ interface, S3-like API, cloud solution integration) which might not be
 efficiently serviced by Lustre. OLCF is constantly evaluating new and emerging
 file and storage system technologies.  
 
-Ceph\cite{Weil:2006:Ceph} originated from Sage Weil's PhD research at UC Santa
-Cruz at 2007 and it was designed to be a reliable, scalable fault-tolerant
-parallel file system.  Since then, Ceph has been open-sourced and Inktank is
-now the major developer behind it.  In comparison to other parallel file
+Ceph\cite{Weil:2006:Ceph} is a distributed storage system designed for
+scalability, reliability, and performance.  The system is based on a
+distributed object storage service called RADOS (reliable autonomic distributed
+object store) that manages the distribution, replication, and migration of
+objects.  On top of that reliable storage abstraction Ceph builds a range of
+services, including a block storage abstraction (RBD, or rados block device)
+and a cache-coherent distributed file system (CephFS).
+
+Data objects are distributed across storage daemons (ceph-osd) using
+CRUSH\cite{crush}, a deterministic hashing function that allows administrators
+to define flexible placement policies over a hierarchical cluster structure
+(e.g., disks, hosts, racks, rows, datacenters).  Because the location of
+objects can be calculated based on the object identifier and cluster layout
+(similar to consistent hashing~\cite{..}), there is no need for a metadata
+index or server for the RADOS object store. Further, because CRUSH provides an
+authoritative view of data placement, storage daemons can coordinate directly
+to handle data replications, recovery, or object migratation in the face of
+failure or cluster topology changes.  A small cluster of monitors (ceph-mon
+daemons) use Paxos to provide consensus on the current cluster layout, but do
+not need to explicitly coordinate migration or recovery activities.
+
+CephFS builds a distributed cache-coherent file system on top of the object
+storage service provided by RADOS.  Files are striped over objects stored and
+replicated by RADOS, while a separate cluster of metadata servers (ceph-mds
+daemons) manage the file system namespace and coordinate client access to
+files.  
+
+Ceph metadata servers store all metadata in RADOS object, which provides a
+shared, highly-available, and reliable storage backend.  Unlike many other
+distributed file system architectures, Ceph also embeds inodes inside
+directories in the common case, allowing entire directories to read from RADOS
+into the metadata server cache or prefetched into the client cache using a
+single request.
+
+Client hosts that mount the file system communicate with one or more metadata
+servers to traverse the namespace but perform file IO by reading and writing
+directly to RADOS objects that contain the file data.  The metadata server
+cluster monitors the temperature of cached metadata and periodically adjusts
+the distribution of the namespace across the MDS cluster by migrating
+responsibility for arbitrary subtrees of the hierarchy between a dynamic pool
+of active ceph-mds daemons.  This dynamic subtree partitioning~\cite{..}
+strategy is both adaptive and highly scalable, allowing additional metadata
+server daemons to be added or removed at any time, making it ideally suited
+both for large-scale workloads with bursty workloads or general purpose
+clusters whose workloads grow or contract over time.
+
+In comparison to other parallel file
 systems, Ceph has a number of distinctive features:
 
+\begin{comment}
 \begin{itemize}
  
 \item Ceph has an intelligent and powerful data placement mechanism, known as
@@ -58,6 +102,7 @@ long been integrated into Linux mainline kernel, which eases the deployment and
 out-of-box experience.
 
 \end{itemize}
+\end{comment}
 
 As interesting and feature-rich as Ceph may be,  scalability and performance
 are our top priorities due to the unique requirements our environment.  As part
