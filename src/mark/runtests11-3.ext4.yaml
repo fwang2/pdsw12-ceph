@@ -1,0 +1,17 @@
+cluster:
+  head: nhm@spoon37
+  clients: nhm@spoon37,nhm@spoon38,nhm@spoon39
+  servers: nhm@tick-oss1,nhm@tick-oss3,nhm@tick-oss4
+  mons: nhm@spoon37
+  osds_per_node: 11 
+  fs: ext4 
+  mount_opts: -o noatime,user_xattr 
+  ceph.conf: /home/nhm/src/ceph-tools/aging/ceph.conf
+  iterations: 1
+  rebuild_every_test: True
+radosbench:
+  op_sizes: [4194304]
+  modes: ['write']
+  time: 300 
+  concurrent_ops: [32]
+  concurrent_procs: 8

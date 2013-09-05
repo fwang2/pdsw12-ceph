@@ -44,9 +44,9 @@ def mkosds(lists, yaml):
                 name = "osd.%d" % i
                 lists[name] = []
                 lists[name].append("        host = %s" % server)
-                lists[name].append("        osd data = /tmp/mnt/osd-device-%d-data" % j)
+                lists[name].append("        osd data = /mnt/osd-device-%d-data" % j)
 #                lists[name].append("        osd journal = /dev/mapper/%s-sata-l%d" % (server, j + yaml.get('osds_per_server', 0)))
-                lists[name].append("        osd journal = /tmp/mnt/osd-device-%d-data/journal" % j)
+                lists[name].append("        osd journal = /mnt/osd-device-%d-data/journal" % j)
                 i += 1
 
 def writescript(f, param, value, conf):

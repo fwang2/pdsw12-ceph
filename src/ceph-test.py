@@ -1,4 +1,4 @@
-#!/chexport/users/fwang2/python/bin/python
+#!/usr/bin/env python
 
 import argparse
 import os
@@ -8,21 +8,36 @@ import yaml
 import shutil
 import sys
 
+from color import hprint, eprint
+
 global ior_config, cluster_config, mpi_config, mdtest_config
 
-# IOR_cmd = "/chexport/users/fwang2/bin/IOR"
-# MDTEST_cmd = "/chexport/users/fwang2/bin/mdtest"
-# INIT_cmd = "/chexport/users/nhm/apps/bin/ceph-init"
-# CEPH_cmd = "/chexport/users/nhm/local/bin/ceph"
-# MKCEPHFS_cmd = "/chexport/users/nhm/local/sbin/mkcephfs"
-# MPI_cmd = "mpirun"
-# MON_addr = "10.37.248.43:6789"
+IOR_cmd = "/ccs/techint/home/fwang2/local/bin/IOR"
+MDTEST_cmd = "/ccs/techint/home/fwang2/local/bin/mdtest"
+INIT_cmd = "/ccs/techint/home/fwang2/local/bin/ceph-init"
+
+# this command requires cooporation from remote host's LD_LIBRARY_PATH
+# for example, spoon37:/root/.bashrc, I have the following:
+#
+# export LD_LIBRARY_PATH=/ccs/techint/home/fwang2/local/lib64:/ccs/techint/home/fwang2/local/lib:$LD_LIBRARY_PATH
+# export PATH=/ccs/techint/home/fwang2/local/bin:/ccs/techint/home/fwang2/local/sbin:$PATH
+
+CEPH_cmd = "/ccs/techint/home/fwang2/local/bin/ceph"
+
+
+MKCEPHFS_cmd = "/ccs/techint/home/fwang2/local/sbin/mkcephfs"
+MPI_cmd = "mpirun"
+
+# Monitor host: spoon41
+MON_addr = "10.37.248.43:6789"
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Ceph Test Harness Program")
-    parser.add_argument('--conf', nargs=1, default="ior.yaml", help = "YAML config file")
+    parser.add_argument('--conf', nargs=1, default="ceph.yaml", help = "YAML config file")
     parser.add_argument('--cephconf', nargs=1, default="default.ceph.conf",
             help="Default Ceph configuration file")
+
+    parser.add_argument("--gen", action="store_true", help="Generate configure permutations")
 
     action = parser.add_mutually_exclusive_group(required=True)
 
@@ -30,7 +45,7 @@ def parse_args():
     action.add_argument("--umount", action="store_true", help = "Umount cephfs")
     action.add_argument("--rebuild", action="store_true", help = "Setup Ceph from scratch")
     action.add_argument("--tuneup", action="store_true", help = "Tuneup parameters for Ceph cluster")
-    action.add_argument("--restart", action="store_true", help = "Start up Ceph")
+    action.add_argument("--create", action="store_true", help = "Set up Ceph From Scratch")
     action.add_argument("--reboot-clients", action="store_true", help = "Reboot Ceph clients")
     action.add_argument("--shutdown", action="store_true", help = "Shutdown Ceph")
     action.add_argument("--ior", action="store_true", help = "Run IOR tests")
@@ -104,7 +119,7 @@ def ceph_check_osd(blockfs, x, y):
         if not str(y) in line:
             raise RuntimeError("OSD count doesn't match: expect %s, have %s"
                     % (y, line))
-    print "OSD checking is Okay"
+    hprint("OSD checking is Okay")
 
 def setqp(args):
     servers = cluster_config['servers']
@@ -113,6 +128,10 @@ def setqp(args):
     print stdout
 
 def get_nodes():
+    """
+    return every nodes: including all client nodes
+    """
+
     servers = cluster_config['servers'].split(",")
     clients = cluster_config['clients'].split(",")
     mds = cluster_config.get('mds', 'tick-mds1').split(",")
@@ -120,6 +139,10 @@ def get_nodes():
     return ",".join(list(set(servers + clients + mds + mons)))
 
 def get_server_nodes():
+    """
+    return list of server nodes: osd server + mds + monitor
+    """
+
     servers = cluster_config['servers'].split(",")
     head = cluster_config['head'].split(",")
     mds = cluster_config.get('mds', 'tick-mds1').split(",")
@@ -135,24 +158,34 @@ def start_ceph():
     pdsh(get_server_nodes(), INIT_cmd + ' start')
 
 def purge_logs():
+
+    hprint("Delete old ceph logs")
+
     pdsh(get_server_nodes(), 'rm -rf /chexport/users/fwang2/ceph/*.log')
     mons = cluster_config.get('mons', 'spoon41')
     pdsh(mons, 'rm -rf /tmp/mon.a')
 
 def shutdown(msg):
-    #print "Stopping monitor ..."
-    #stop_monitoring()
-    print "Stopping ceph ..."
+    eprint("Fatal error, quitting now")
     stop_ceph()
     sys.exit(msg)
 
 def setup_mds_mons():
-    print "Setup MDS ..."
+
+    hprint("Setup MDS ...")
     mds = cluster_config['mds']
     pdsh(mds, 'mkdir -p /var/log/ceph')
 
 def setup_osd_fs():
-    print "Setup OSD filesystems"
+    """
+    create OSD file system. After this call: /tmp/mnt should have 11 empty directory mounted.
+    osd-device-0-data
+    osd-device-1-data
+    ...
+    osd-device10-data
+    """
+
+    hprint("Setup OSD filesystems")
     servers = cluster_config['servers']
 
     fs = cluster_config.get('fs', 'btrfs')
@@ -163,9 +196,10 @@ def setup_osd_fs():
     if fs == '':
         shutdown("No OSD filesystem specified, Exit")
     for device in xrange(0, osds_per_node):
-        out0, err0 = pdsh(servers, 'umount /mnt/osd-device-%s-data; rm -rf /mnt/osd-device-%s-data' % (device, device)).communicate()
+        out0, err0 = pdsh(servers, 'umount /tmp/mnt/osd-device-%s-data; rm -rf /tmp/mnt/osd-device-%s-data' %
+                (device, device)).communicate()
 
-        out1, err1 = pdsh(servers, 'mkdir /mnt/osd-device-%s-data' % device).communicate()
+        out1, err1 = pdsh(servers, 'mkdir /tmp/mnt/osd-device-%s-data' % device).communicate()
 
         if err1:
             shutdown(err1)
@@ -176,19 +210,19 @@ def setup_osd_fs():
         if err2:
             shutdown(err2)
 
-        out3, err3 = pdsh(servers, 'mount %s -t %s /dev/mapper/tick-oss*-sas-l%s /mnt/osd-device-%s-data'
+        out3, err3 = pdsh(servers, 'mount %s -t %s /dev/mapper/tick-oss*-sas-l%s /tmp/mnt/osd-device-%s-data'
                 % (mount_opts, fs, device, device)).communicate()
 
         if  err3:
             shutdown(err3)
 
 def mkcephfs():
-    print "Running mkcephfs ..."
+    hprint("Running mkcephfs ...")
     head = cluster_config['head']
     pdsh(head, '%s -a -c /etc/ceph/ceph.conf' % MKCEPHFS_cmd).communicate()
 
 def setup_pools():
-    print "Setup pools ..."
+    hprint("Setup pools ...")
     head = cluster_config['head']
     out1, err1 = pdsh(head, "%s osd pool create rest-bench 2048 2048" %
             CEPH_cmd).communicate()
@@ -200,22 +234,28 @@ def setup_pools():
     else:
         print(out1 + out2)
 
-def setup_ceph():
-    print "Stopping ceph"
+def create_ceph_rados():
+
     stop_ceph()
-    print "Delete old ceph logs"
+
     purge_logs()
 
     setup_mds_mons()
+
     setup_osd_fs()
+
+
     mkcephfs()
+
     start_ceph()
+
     ceph_check_health()
-    setup_pools()
-    #if rgws:
-    #    pass
-    print "Ceph filesystem has been created."
-    print "Note: Ceph clients are not mounted yet, use --mount"
+
+    #setup_pools()
+
+
+    hprint("Ceph filesystem has been created.")
+    hprint("Note: Ceph clients are not mounted yet, use --mount")
 
 def reboot_clients():
     clients = cluster_config['clients']
@@ -286,7 +326,8 @@ def ceph_check_health():
             break
         else:
             print stdout
-        time.sleep(1)
+            print stderr
+        time.sleep(5)
 
 def ior_test():
     clients = cluster_config['clients'].split(',')
@@ -361,7 +402,7 @@ def mdtest():
 if __name__ == "__main__":
 
     args = parse_args()
-    config = read_config(args.iorconf)
+    config = read_config(args.conf)
     cluster_config = config['cluster']
     ior_config = config['ior']
     mpi_config = config['mpi']
@@ -384,9 +425,10 @@ if __name__ == "__main__":
     elif args.distconf:
         config_file = config.get('ceph.conf', 'default.ceph.conf')
         setup_ceph_conf(config_file)
-    elif args.restart:
-        stop_ceph()
-        start_ceph()
+    elif args.create:
+
+        create_ceph_rados()
+
     elif args.shutdown:
         stop_ceph()
     elif args.ior:

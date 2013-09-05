@@ -43,3 +43,9 @@ mdtest:
     dir: /mnt/cephfs/tmp1
     iteration: 5
 
+rados:
+
+    
+xfs:
+
+

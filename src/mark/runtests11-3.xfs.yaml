@@ -1,0 +1,18 @@
+cluster:
+  head: nhm@spoon37
+  clients: nhm@spoon28,nhm@spoon29,nhm@spoon30,nhm@spoon31,nhm@spoon37,nhm@spoon38,nhm@spoon39,nhm@spoon40
+  servers: nhm@tick-oss1,nhm@tick-oss2,nhm@tick-oss3
+  mons: nhm@spoon41
+  osds_per_node: 11 
+  fs: xfs 
+  mkfs_opts: -f -i size=2048 -d su=256k,sw=4 -n size=64k
+  mount_opts: -o inode64,noatime,logbsize=256k
+  ceph.conf: /home/nhm/src/ceph-tools/aging/ceph.conf
+  iterations: 1
+  rebuild_every_test: True
+radosbench:
+  op_sizes: [4194304]
+  modes: ['write','seq']
+  time: 300 
+  concurrent_ops: [32]
+  concurrent_procs: 4 
