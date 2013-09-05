@@ -1,16 +1,13 @@
 cluster:
     head: spoon37
     servers: tick-oss1,tick-oss2,tick-oss3,tick-oss4
-    #clients: spoon28,spoon29,spoon30,spoon31,spoon37,spoon38,spoon39,spoon40
     clients: spoon28,spoon29,spoon30,spoon31,spoon37,spoon38,spoon39,spoon40
     start: 1
     mds: tick-mds1
     mons: spoon41
     osds_per_node: 11
     fs: xfs
-    mkfs_opts: -f -i size=2048 
-    mount_opts: -o inode64,noatime
-    outdir: /chexport/users/fwang2/ior-data
+    outdir: /ccs/techint/home/fwang2/ceph-test/data
 
 ior:
 
@@ -31,10 +28,6 @@ ior:
     outdir: /mnt/cephfs/tfile
     flags: -a POSIX -e -F -r -w -C -d 5 -i 2 
 
-mpi:
-
-# none at this point
-
 mdtest:
 
     unique: -u
@@ -43,9 +36,48 @@ mdtest:
     dir: /mnt/cephfs/tmp1
     iteration: 5
 
-rados:
+rados.bench:
+
+  op_sizes: [4194304]
+  modes: ['write','seq']
+  time: 300
+  concurrent_ops: [32]
+  concurrent_procs: 4
+
+xfs:
+    mkfs_opts: -f -i size=2048
+    mount_opts: -o inode64,noatime
+
+btrfs:
+    mkfs_opts: -l 16k -n 16k
+    mount_opts: -o noatime
+
+ext4:
+    mkfs_opts:
+    mount_opts: -o noatime,user_xattr
+
+ceph.conf.default:
+
+  global:
+          log_to_syslog: "false"
+          log_file: "/chexport/users/fwang2/ceph/$name.log"
+          auth_cluster_required: "none"
+          auth_service_required: "none"
+          auth_client_required: "none"
+          filestore_xattr_use_omap: "true"
+          public_network: "10.37.0.0/16"
+          cluster_network: "10.37.0.0/16"
+          journal_aio: "true"
+          ms_nocrc: "true"
+
+  mon:
+          mon_data: "/tmp/mon.$id"
+
+  osd:
+          osd_journal_size: 10240
+
+  mon.a:
+          host: "spoon41"
+          mon_addr: "10.37.248.43:6789"
 
     
-xfs:
-
-

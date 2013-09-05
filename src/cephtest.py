@@ -10,7 +10,8 @@ import sys
 
 from color import hprint, eprint
 
-global ior_config, cluster_config, mpi_config, mdtest_config
+global ceph_config, ior_config, cluster_config, mpi_config, mdtest_config, ceph_config_table
+global para_config, xfs_config, btrfs_config, ext4_config
 
 IOR_cmd = "/ccs/techint/home/fwang2/local/bin/IOR"
 MDTEST_cmd = "/ccs/techint/home/fwang2/local/bin/mdtest"
@@ -37,7 +38,6 @@ def parse_args():
     parser.add_argument('--cephconf', nargs=1, default="default.ceph.conf",
             help="Default Ceph configuration file")
 
-    parser.add_argument("--gen", action="store_true", help="Generate configure permutations")
 
     action = parser.add_mutually_exclusive_group(required=True)
 
@@ -49,8 +49,7 @@ def parse_args():
     action.add_argument("--reboot-clients", action="store_true", help = "Reboot Ceph clients")
     action.add_argument("--shutdown", action="store_true", help = "Shutdown Ceph")
     action.add_argument("--ior", action="store_true", help = "Run IOR tests")
-    action.add_argument("--distconf", action="store_true", help = "Distribute Ceph configuration file")
-    action.add_argument("--checkfs", action="store_true", help = "Check cephfs health")
+    action.add_argument("--check-health", action="store_true", help = "Check Ceph Health")
     action.add_argument("--mdtest", action="store_true", help = "CephFS metadata test")
     action.add_argument("--rados", action="store_true", help = "Ceph Rados Bench")
 
@@ -151,10 +150,13 @@ def get_server_nodes():
 
 
 def stop_ceph():
+    hprint("Stopping ceph ...")
     pdsh(get_server_nodes(), INIT_cmd + ' stop')
     pdsh(get_server_nodes(), 'killall -9 ceph-osd;killall -9 ceph-mon;killall -9 ceph-mds')
 
 def start_ceph():
+
+    hprint("Starting up ceph through ceph-init script ...")
     pdsh(get_server_nodes(), INIT_cmd + ' start')
 
 def purge_logs():
@@ -189,10 +191,19 @@ def setup_osd_fs():
     servers = cluster_config['servers']
 
     fs = cluster_config.get('fs', 'btrfs')
-    mkfs_opts = cluster_config.get('mkfs_opts', '-o noatime')
-    osds_per_node = int(cluster_config.get('osds_per_node'))
-    mount_opts = cluster_config.get('mount_opts', '-o inode64,noatime')
+    config = None
 
+    if fs == 'xfs':
+        config = xfs_config
+    elif fs == 'btrfs':
+        config = btrfs_config
+    else:
+        config = ext4_config
+
+    mkfs_opts = config.get('mkfs_opts', '-o noatime')
+    mount_opts = config.get('mount_opts', '-o inode64,noatime')
+
+    osds_per_node = int(cluster_config.get('osds_per_node'))
     if fs == '':
         shutdown("No OSD filesystem specified, Exit")
     for device in xrange(0, osds_per_node):
@@ -221,24 +232,39 @@ def mkcephfs():
     head = cluster_config['head']
     pdsh(head, '%s -a -c /etc/ceph/ceph.conf' % MKCEPHFS_cmd).communicate()
 
+def check_err(out, err):
+    if err:
+        shutdown(err)
+    else:
+        print(out)
+
 def setup_pools():
     hprint("Setup pools ...")
     head = cluster_config['head']
-    out1, err1 = pdsh(head, "%s osd pool create rest-bench 2048 2048" %
-            CEPH_cmd).communicate()
-    out2, err2 = pdsh(head, "%s osd pool set rest-bench size 1" %
-            CEPH_cmd).communicate()
 
-    if err1 or err2:
-        shutdown(err1 + err2)
-    else:
-        print(out1 + out2)
+    out, err = pdsh(head, "%s osd pool set data size 1" % CEPH_cmd).communicate()
+    check_err(out, err)
+
+    out, err = pdsh(head, "%s osd pool set metadata size 1" % CEPH_cmd).communicate()
+    check_err(out, err)
+
+    out, err = pdsh(head, "%s osd pool create rest-bench 2048 2048" %
+            CEPH_cmd).communicate()
+    check_err(out, err)
+
+    out, err = pdsh(head, "%s osd pool set rest-bench size 1" %
+            CEPH_cmd).communicate()
+    check_err(out, err)
 
 def create_ceph_rados():
 
     stop_ceph()
 
     purge_logs()
+
+    generate_ceph_conf()
+
+    distribute_ceph_conf("ceph.conf")
 
     setup_mds_mons()
 
@@ -251,7 +277,7 @@ def create_ceph_rados():
 
     ceph_check_health()
 
-    #setup_pools()
+    setup_pools()
 
 
     hprint("Ceph filesystem has been created.")
@@ -262,24 +288,12 @@ def reboot_clients():
     print "Reboot clients: %s" % clients
     pdsh(clients, "shutdown -r now")
 
-def setup_ceph_conf(conf):
-    print "Distributing ... %s" % conf
+def distribute_ceph_conf(conf):
+    hprint("Distributing ... %s" % conf)
     out, err = pdcp(get_server_nodes(),  conf, "/etc/ceph/ceph.conf").communicate()
     if err:
         shutdown(err)
 
-def setup_cluster(tmp_dir):
-
-    stop_ceph()
-
-    config_file = config.get('ceph.conf', 'default.ceph.conf')
-
-    if not os.path.exists(config_file):
-        shutdown("Can't locate ceph.conf")
-    # stop perf monitor if any
-    pdsh(get_server_nodes(), 'rm -rf %s' % tmp_dir)
-
-    setup_ceph_conf(config_file)
 
 def tuneup():
     setqp("nr_requests 2048")
@@ -399,14 +413,76 @@ def ior_test():
 def mdtest():
     pass
 
+def populate(l, name, value):
+    """
+    original configure options such as "mon_addr" in yaml will be output
+    as "mon addr" in ceph.conf
+    """
+    name = name.replace("_", " ")
+    l.append("        %s = %s" % (name, value))
+
+def mkosds(lists):
+    """
+    Generate all osd permutation based on # of OSD servers and # of OSDs per server
+    If osd server is given as a string, we will split it. This is to preserve the compatibility
+    with other portions of the program. Maybe specifying as [ ... ] will simplify.
+
+    """
+    i = 0
+    osd_servers = cluster_config["servers"]
+    if isinstance(osd_servers, str):
+        osd_servers = osd_servers.split(",")
+
+    for server in osd_servers:
+        for j in xrange(0, cluster_config.get('osds_per_node', 0)):
+            name = "osd.%d" % i
+            lists[name] = []
+            lists[name].append("        host = %s" % server)
+            lists[name].append("        osd data = /tmp/mnt/osd-device-%d-data" % j)
+            lists[name].append("        osd journal = /tmp/mnt/osd-device-%d-data/journal" % j)
+            i += 1
+
+def write_ceph_config(lists, out):
+    with open(out, "w") as f:
+        for k, v in sorted(lists.iteritems()):
+            f.write("[%s]\n" % k)
+            for line in v:
+                f.write("%s" % line)
+                f.write("\n")
+
+def parametric(lists):
+    if "global" not in lists:
+        lists["global"] = []
+
+    filename = "ceph.conf"
+    write_ceph_config(lists, filename)
+
+
+def generate_ceph_conf():
+    hprint("Generating Ceph configurations")
+
+    lists = {}
+    default = ceph_config
+    for section in default:
+        lists[section] = []
+        for k,v in default.get(section).iteritems():
+            populate(lists.get(section), k, v)
+
+    mkosds(lists)
+    parametric(lists)
+
+
 if __name__ == "__main__":
 
     args = parse_args()
     config = read_config(args.conf)
     cluster_config = config['cluster']
     ior_config = config['ior']
-    mpi_config = config['mpi']
     mdtest_config = config.get('mdtest', 'None')
+    ceph_config = config.get('ceph.conf.default', {})
+    xfs_config = config['xfs']
+    ext4_config = config['ext4']
+    btrfs_config = config['btrfs']
 
     if args.umount:
         ceph_umount_clients()
@@ -416,21 +492,14 @@ if __name__ == "__main__":
         tuneup()
     elif args.reboot_clients:
         reboot_clients()
-    elif args.checkfs:
+    elif args.check_health:
         ceph_check_health()
         ceph_check_osd("xfs", 4, 11)
     elif args.rebuild:
         setup_cluster("/tmp/cephtest")
         setup_ceph()
-    elif args.distconf:
-        config_file = config.get('ceph.conf', 'default.ceph.conf')
-        setup_ceph_conf(config_file)
     elif args.create:
-
         create_ceph_rados()
-
-    elif args.shutdown:
-        stop_ceph()
     elif args.ior:
         ior_test()
     elif args.mdtest:
