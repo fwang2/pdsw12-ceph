@@ -10,19 +10,19 @@ import sys
 
 global ior_config, cluster_config, mpi_config, mdtest_config
 
-IOR_cmd = "/chexport/users/fwang2/bin/IOR"
-MDTEST_cmd = "/chexport/users/fwang2/bin/mdtest"
-INIT_cmd = "/chexport/users/nhm/apps/bin/ceph-init"
-CEPH_cmd = "/chexport/users/nhm/local/bin/ceph"
-MKCEPHFS_cmd = "/chexport/users/nhm/local/sbin/mkcephfs"
-MPI_cmd = "mpirun"
-MON_addr = "10.37.248.43:6789"
+# IOR_cmd = "/chexport/users/fwang2/bin/IOR"
+# MDTEST_cmd = "/chexport/users/fwang2/bin/mdtest"
+# INIT_cmd = "/chexport/users/nhm/apps/bin/ceph-init"
+# CEPH_cmd = "/chexport/users/nhm/local/bin/ceph"
+# MKCEPHFS_cmd = "/chexport/users/nhm/local/sbin/mkcephfs"
+# MPI_cmd = "mpirun"
+# MON_addr = "10.37.248.43:6789"
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="IOR Test")
-    parser.add_argument('--iorconf', nargs=1, default="ior.yaml", help = "YAML config file")
+    parser = argparse.ArgumentParser(description="Ceph Test Harness Program")
+    parser.add_argument('--conf', nargs=1, default="ior.yaml", help = "YAML config file")
     parser.add_argument('--cephconf', nargs=1, default="default.ceph.conf",
-            help="Default ceph configuration file")
+            help="Default Ceph configuration file")
 
     action = parser.add_mutually_exclusive_group(required=True)
 
@@ -33,10 +33,11 @@ def parse_args():
     action.add_argument("--restart", action="store_true", help = "Start up Ceph")
     action.add_argument("--reboot-clients", action="store_true", help = "Reboot Ceph clients")
     action.add_argument("--shutdown", action="store_true", help = "Shutdown Ceph")
-    action.add_argument("--runtests", action="store_true", help = "Run IOR tests")
+    action.add_argument("--ior", action="store_true", help = "Run IOR tests")
     action.add_argument("--distconf", action="store_true", help = "Distribute Ceph configuration file")
     action.add_argument("--checkfs", action="store_true", help = "Check cephfs health")
     action.add_argument("--mdtest", action="store_true", help = "CephFS metadata test")
+    action.add_argument("--rados", action="store_true", help = "Ceph Rados Bench")
 
     args = parser.parse_args()
 
@@ -287,7 +288,7 @@ def ceph_check_health():
             print stdout
         time.sleep(1)
 
-def run_all():
+def ior_test():
     clients = cluster_config['clients'].split(',')
     servers = cluster_config['servers'].split(',')
     idx = int(cluster_config['start'])
@@ -356,7 +357,7 @@ def run_all():
 
 def mdtest():
     pass
-    
+
 if __name__ == "__main__":
 
     args = parse_args()
@@ -388,8 +389,8 @@ if __name__ == "__main__":
         start_ceph()
     elif args.shutdown:
         stop_ceph()
-    elif args.runtests:
-        run_all()
+    elif args.ior:
+        ior_test()
     elif args.mdtest:
         mdtest()
     else:

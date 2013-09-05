@@ -1,14 +1,25 @@
 
-% Font related
-%\usepackage{fontspec}
-%\defaultfontfeatures{Mapping=tex-text}
-%\setmainfont{rosario}
-%\setmonofont{Consolas}
-%\setmainfont{Times}
-%\setmonofont{Inconsolata}
-%\setmonofont[Scale=0.8]{Monaco}
-%\setmonofont{Courier}
 
+% to support both pdflatex and lualatex
+\usepackage{ifluatex}
+
+\ifluatex
+
+    \usepackage{fontspec}
+    \setmainfont{Times}
+    \setmonofont[Scale=0.8]{Courier}
+    % Font related
+    %\setmainfont{rosario}
+    %\setmonofont{Consolas}
+    %\setmonofont{Inconsolata}
+    %\setmonofont[Scale=0.8]{Monaco}
+
+\else
+
+    \usepackage[utf8]{inputenc}
+    \usepackage[T1]{fontenc}
+
+\fi
 
 \usepackage{microtype}
 \usepackage{comment}
@@ -21,13 +32,12 @@
 
 
 % graph related
-\usepackage[pdftex]{graphicx}
+\usepackage{graphicx}
 \graphicspath{{./data/}{./figs/}}
 \DeclareGraphicsExtensions{.pdf,.jpg,.png}
 
 % math related
 \usepackage[cmex10]{amsmath}
-%\usepackage{mathptm}
 
 
 \usepackage{url}
@@ -57,9 +67,6 @@
 
 \fvset{fontsize=\small}
 
-
-
-\usepackage{fontspec}
 
 
 
