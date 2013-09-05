@@ -1,0 +1,81 @@
+
+
+% to support both pdflatex and lualatex
+\usepackage{ifluatex}
+
+\ifluatex
+
+    \usepackage{fontspec}
+    \setmainfont{Times}
+    \setmonofont[Scale=0.8]{Courier}
+    % Font related
+    %\setmainfont{rosario}
+    %\setmonofont{Consolas}
+    %\setmonofont{Inconsolata}
+    %\setmonofont[Scale=0.8]{Monaco}
+
+\else
+
+    \usepackage[utf8]{inputenc}
+    \usepackage[T1]{fontenc}
+
+\fi
+
+\usepackage{microtype}
+\usepackage{comment}
+\usepackage{fancyvrb}
+\usepackage{comment}
+
+
+% auto sort citations
+\usepackage{cite}
+
+
+% graph related
+\usepackage{graphicx}
+\graphicspath{{./data/}{./figs/}}
+\DeclareGraphicsExtensions{.pdf,.jpg,.png}
+
+% math related
+\usepackage[cmex10]{amsmath}
+
+
+\usepackage{url}
+
+\usepackage[colorlinks = true,%
+            linkcolor = blue,%
+            urlcolor  = blue,%
+            citecolor = blue,%
+            anchorcolor = blue]{hyperref}
+
+
+\usepackage{setspace}
+\onehalfspacing
+
+
+
+\usepackage{authblk}
+\renewcommand\Affilfont{\normalsize}
+\renewcommand\Authfont{\normalsize}
+%\author[1]{Feiyi Wang}
+%\author[2]{Mark Nelson}
+%\author[1]{Sarp Oral}
+%\affil[1]{Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831}
+%\affil[2]{Inktank Inc., Los Angeles, CA 90017}
+
+
+
+\fvset{fontsize=\small}
+
+
+
+
+% IN BODY
+
+%\bibliographystyle{IEEEtran}
+%\bibliography{IEEEabrv,paper}
+
+% if we want to include everything
+%\nocite{*}
+
+

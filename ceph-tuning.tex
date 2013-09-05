@@ -1,4 +1,4 @@
-\section{Tuning, Optimization and Improvements}
+\section{Further Optimization and Improvements}
 \label{sec:ceph-tuning}
 
 \subsection{Improving RADOS Performance}
@@ -22,8 +22,9 @@ count on the server.  With these changes, we are seeing better results.
 
 We swept over Ceph configuration parameters to examine how different tuning
 options affect performance on the DDN platform. The result of this parameter
-probing is illustrated in Figure~\ref{fig:parametric}. Please refer to Appendix
-E for explanations of these probed parameters.
+probing is illustrated in Figure~\ref{fig:parametric}. Please refer to
+Appendix E of \cite{ceph:techreport} for explanations of these probed
+parameters.
 
 
 As a result of this testing, we improved performance slightly by
@@ -70,49 +71,6 @@ Figure~\ref{fig:rados-ddn-mirror-disabled}. With BTRFS, for example, we hit over
 11 GB/s to the disks and very close to what the DDN chassis is capable of doing. 
 Unfortunately, read performance did not scale as well.
 
-\end{comment}
-
-
-\subsubsection{Disable TCP autotuning}
-
-During these tests, a trend that previously had been seen became more apparent.
-During reads, there were periods of high performance followed by periods of low
-performance or outright stalls that could last for up to 20 seconds at a time.
-After running diagnostics, we observed that outstanding operations on the
-clients were not being shown as outstanding on the OSDs.  This appeared to be
-very similar to a problem Jim Schutt at Sandia National labs encountered with
-TCP autotuning in the Linux
-kernel.\footnote{\url{http://marc.info/?l=ceph-devel&m=133009796706284&w=2}}
-TCP auto tuning enables TCP window scaling by default and automatically adjusts
-the TCP receive window for each connection based on link conditions such as
-bandwidth delay product. We have observed this improving the performance
-significantly on Ceph read operations, as the results shown in
-Figure~\ref{fig:rados-tcp-auto-disabled}.
-
-
-Luckily, the fix was fairly straight forward by issuing the following command
-on all nodes:
-
-\begin{Verbatim}[fontsize=\small]
- echo 0 | sudo tee 
-   /proc/sys/net/ipv4/tcp_moderate_rcvbuf
-\end{Verbatim}
-
-Recent versions of Ceph work around this issue by manually controlling the TCP
-buffer size.  
-
-\begin{figure}[htb]
-\centering
-\includegraphics[width=3.5in]{rados-after-ddn-tcptune}
-\caption{Evaluating RADOS bench after TCP auto tuning disabled}
-\label{fig:rados-tcp-auto-disabled}
-\end{figure}
-
-
-
-%\begin{figure}[htb]
-%\includegraphics[width=5in]{rados-064-oss}
-%\end{figure}
 
 \subsubsection{Repeating RADOS Scaling Test}
 
@@ -158,17 +116,24 @@ nodes}
 \label{fig:rados-064-oss}
 \end{figure}
 
+\end{comment}
+
 
 
 \subsection{Improving Ceph File System Performance}
 \label{sec:ceph-tuning-fs}
 
 The initial stability issues mentioned in Section~\ref{sec:ior-initial} are
-fixed by migrating from Ceph version 0.48/0.55 to 0.64, the latest stable version at the
-time of writing this report.  Upgrading to the latest stable Ceph release
-allowed us to run a full IOR parameter sweep for the first time since we
-started evaluating the performance and scalability of the Ceph file system.
-This is another sign of how much Ceph development is currently in flux.
+fixed by migrating from Ceph version 0.48/0.55 to 0.64, the latest stable
+version at the time of writing this report.  Upgrading to the latest stable
+Ceph release allowed us to run a full IOR parameter sweep for the first time
+since we started evaluating the performance and scalability of the Ceph file
+system.  This is another sign of how much Ceph development is currently in
+flux.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% removed for space
+
+\begin{comment}
 
 Another fix introduced by Ceph version 0.64 was in pool creation.  The default
 data pool used by previous Ceph version were set to 2x replication by mistake.
@@ -177,9 +142,12 @@ set the replication level to 1, which is the preferred value for a HPC
 environment like ours running on high-end and reliable storage backend hardware
 (e.g. DDN SFA10K).
 
-Even with these two changes in place, less-than-ideal write performance and
-very poor read performances were observed during our tests.  We also observed
-that by increasing the number of IOR processes per client node, the read
+\end{comment}
+
+
+Even with these changes in place, less-than-ideal write performance and very
+poor read performances were observed during our tests.  We also observed that
+by increasing the number of IOR processes per client node, the read
 performance degraded even further indicating some kind of contention either on
 the clients or on the OSD servers.
 
@@ -190,13 +158,17 @@ At this point, we were able to both make more client nodes available for Ceph
 file system-level testing and also install a profiling tool called \verb!perf!
 that is extremely useful for profiling both kernel and user space codes.
 Profiling with \verb!perf! showed high CPU utilization on test clients due to
-CRC32c processing in the Ceph kernel client.  CRC32 checksums can be disabled
-by changing the CephFS mount options:
+CRC32c processing in the Ceph kernel client.  
 
-\begin{Verbatim}[fontsize=\small]
-mount -t ceph 10.37.248.43:6789:/ 
-    /mnt/ceph -o name=admin,nocrc
-\end{Verbatim}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% removed
+
+%CRC32 checksums can be disabled
+%by changing the CephFS mount options:
+
+%\begin{Verbatim}[fontsize=\small]
+%mount -t ceph 10.37.248.43:6789:/ 
+%    /mnt/ceph -o name=admin,nocrc
+%\end{Verbatim}
 
 
 With client CRC32 disabled, we repeated the IOR tests. New results are shown in
@@ -204,7 +176,8 @@ in Figure~\ref{fig:ior-no-client-crc32}.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=3.5in]{ior-client-no-crc32}
+%\includegraphics[width=3.5in]{ior-client-no-crc32}
+\includegraphics[width=3.5in]{ior_no_crc}
 \caption{IOR test with disabling client-side CRC32}
 \label{fig:ior-no-client-crc32}
 \end{figure}
@@ -229,29 +202,30 @@ please refer to \url{http://lwn.net/Articles/517082/} and
 
 We upgraded our test systems with kernel version 3.9 and performed RADOS Bench
 test.  The results were extremely positive and presented in
-Figure~\ref{fig:rados-kernel}.
+Figure~\ref{fig:rados-kernel}. As can be seen, with the 3.9 kernel, while
+there was a slight improvement on write performance, read performance improved
+dramatically.  In addition to the kernel change, the amount of CephFS client
+kernel read-ahead cache size was increased as well.
 
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=3.5in]{rados-kernel-35vs39}
+%\includegraphics[width=3.5in]{rados-kernel-35vs39}
+\includegraphics[width=3.5in]{rados_kernel}
 \caption{RADOS bench: Linux kernel version 3.5 vs. 3.9}
 \label{fig:rados-kernel}
 \end{figure}
 
 
 
-As can be seen, with the 3.9 kernel, while there was a slight improvement on
-write performance, read performance improved dramatically.  In addition to the
-kernel change, the amount of CephFS
-client kernel read-ahead cache size was improved as:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% REMOVED to save space
 
-\begin{Verbatim}[samepage=true, fontsize=\small]
-mount -t ceph 10.37.248.43:6789:/ 
-  /mnt/ceph -o name=admin,nocrc,
-  readdir_max_bytes=4104304,
-  readdir_max_entries=8192
-\end{Verbatim}
+%\begin{Verbatim}[samepage=true, fontsize=\small]
+%mount -t ceph 10.37.248.43:6789:/ 
+%  /mnt/ceph -o name=admin,nocrc,
+%  readdir_max_bytes=4104304,
+%  readdir_max_entries=8192
+% \end{Verbatim}
 
 %% SCOTT - is figure 15 IOR over Ceph and 14 is RADOS bench? If so, can we
 %% mention that 15 shows the filesystem performance?
@@ -261,7 +235,8 @@ Figure~\ref{fig:ior-kernel-39}.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=3.5in]{ior-kernel-39}
+%\includegraphics[width=3.5in]{ior-kernel-39}
+\includegraphics[width=3.5in]{ior_kernel_change}
 \caption{CephFS performance with kernel changes to 3.9, IOR with 4 MB transfer
 size}
 \label{fig:ior-kernel-39}

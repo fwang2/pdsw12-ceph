@@ -3,12 +3,12 @@
 
 We used Data Direct Networks' (DDN) SFA10K as the storage backend for this
 evaluation. SFA10K organizes disks into various RAID levels by two
-active-active RAID controllers. The exported RAID groups (LUNs) by these
-controllers are driven by four server hosts (oss-[1-4]).  Each server host has two InfiniBand
-(IB) QDR connections to the storage backend.  We used a single dual-port
-Mellanox ConnectX IB QDR card per host.  By our calculation, this setup is
-adequate to drive the SFA10K at its maximum theoretical throughput (roughly 12
-GB/s). Server hosts and SFA10K connection diagram is illustrated in
+active-active RAID controllers. Exported RAID groups (LUNs) by these
+controllers are driven by four server hosts (oss-[1-4]).  Each server host has
+two InfiniBand (IB) QDR connections to the storage backend.  We used a single
+dual-port Mellanox ConnectX IB QDR card per host.  By our calculation, this
+setup is adequate to drive the SFA10K at its maximum theoretical throughput
+(roughly 12 GB/s). Server hosts and SFA10K connection diagram is illustrated in
 Figure~\ref{fig:ddn-sfa10k}.
 
 \begin{figure}[htb]
@@ -31,12 +31,23 @@ stand-alone computer system running Linux, CPU and memory affinity while
 organizing disks into RAID groups and exporting them is crucial for obtaining
 top performance out of an SFA10K system.  
 
+\begin{comment}
 Our Ceph testbed employs a collection of nodes, including the server hosts
 (oss-[1-4]). These nodes and their roles are summarized in
-Table~\ref{tbl:ceph-test-nodes}. In the following discussion, we use
-``servers'', ``osd servers'', ``server hosts'' interchangeably. We will
-emphasize with ``client'' prefix when we want to distinguish it from above.
+Table~\ref{tbl:ceph-test-nodes}. 
+\end{comment}
 
+In the following discussion, we use ``servers'', ``osd servers'', ``server
+hosts'' interchangeably. We will emphasize with ``client'' prefix when we want
+to distinguish it from above.  All hosts  (client and servers) were configured
+with Redhat 6.3 and kernel version 3.5.1 initially, and later upgraded to 3.9,
+Glibc 2.12 with syncfs support, locally patched.  We used the Ceph 0.48 and
+0.55 release in the initial tests, upgraded to 0.64 and then to 0.67RC for a
+final round of tests.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REMOVED
+\begin{comment}
 \begin{table}[!t]
 \centering
 \caption{Support nodes involved in Ceph testbed}
@@ -52,12 +63,7 @@ emphasize with ``client'' prefix when we want to distinguish it from above.
     \hline
     \end{tabular}
 \end{table}
-
-All hosts  (client and servers) were configured with Redhat 6.3 and kernel
-version 3.5.1 initially, and later upgraded to 3.9 (rhl-ceph image), Glibc
-2.12 with syncfs support, locally patched.  We used the Ceph 0.48 and 0.55
-release in the initial tests, upgraded to 0.64 and then to 0.67RC for a final
-round of tests.
+\end{comment}
 
 %For a complete a list of hosts that are running ceph images, one can execute:
 
@@ -75,9 +81,9 @@ stack introduces new bottlenecks and re-defines the expected theoretical
 performance of the overall system. We will explain each component or layer and
 its expected performance before we present our observed results.
 
-Our tools for benchmarking and evaluating different layers also change as we go
-up in the stack.  For example, a tool perfect for assessing block-level
+Our tools for benchmarking and evaluating different layers also change as we
+go up in the stack.  For example, a tool perfect for assessing block-level
 performance over a single server host might be completely inadequate for
-observing parallel file system performance over multiple clients. As we present
-our evaluations, we will also introduce and explain our benchmark tools, in
-this paper.
+observing parallel file system performance over multiple clients. As we
+present our evaluations, we will also introduce and explain our benchmark
+tools along the way.

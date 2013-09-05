@@ -1,0 +1,16 @@
+# 4 server, 4 client RADOS bench
+# Cache mirroring disabled
+# TCP auto tuning disabled
+# 4MB object
+# 
+# workshop paper: fig 8
+
+filesystem, mode, bw
+BTRFS, Reads, 5447
+BTRFS, Writes, 5619
+EXT4, Reads, 5651
+EXT4, Writes, 5098
+XFS, Reads, 4678
+XFS, Writes, 4720
+
+

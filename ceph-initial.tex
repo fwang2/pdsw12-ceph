@@ -1,4 +1,4 @@
-\section{Ceph Evaluation: Initial Results}
+\section{Ceph Evaluation: Initial Results and Tunings}
 \label{sec:ceph-initial}
 
 \subsection{Ceph RADOS Scaling}
@@ -23,18 +23,76 @@ initial performance analysis of the underlying RADOS layer.  RADOS Bench simply
 writes out objects to the underlying object storage as fast as possible, and
 then later reads those objects in the same order as they were written.
 
-We observed that using two or more client processes and many concurrent
-operations are important when performing these tests.  We tested eight client processes 
-with 32 concurrent 4 MB objects in flight each. We created a pool for
-each RADOS Bench process to ensure that object reads come from independent pools
-(RADOS Bench is not smart enough to ensure that objects are not read by multiple
-processes and thus possibly cached).  A sync and flush is performed on every
-node before every test to ensure no data or metadata is in cache.  All tests
-were run with replication set to one.  The backend file systems were XFS,
-BTRFS and EXT4 file systems were not tested at this time.
+\subsubsection{Disable TCP autotuning}
 
+\begin{figure}[htb]
+\centering
+%\includegraphics[width=3.5in]{rados-after-ddn-tcptune}
+\includegraphics[width=3.5in]{autotune-enabled}
+\caption{Evaluating RADOS bench \textbf{with} TCP auto tuning, 4 servers, 4
+clients, 4 MB I/O}
+\label{fig:rados-tcp-autotune}
+\end{figure}
+
+During our early tests, a trend that previously had been seen became more
+apparent.  During reads, there were periods of high performance followed by
+periods of low performance or outright stalls that could last for up to 20
+seconds at a time.  RADOS bench recorded poor read performance across
+different backend file systems, as shown in
+Figure~\ref{fig:rados-tcp-autotune}.
+
+
+After running diagnostics, we observed that outstanding operations on the
+clients were not being shown as outstanding on the OSDs.  This appeared to be
+very similar to a problem Jim Schutt at Sandia National labs encountered with
+TCP autotuning in the Linux
+kernel\cite{Jim:tcptune}.
+TCP auto tuning enables TCP window scaling by default and automatically adjusts
+the TCP receive window for each connection based on link conditions such as
+bandwidth delay product. 
+
+\begin{figure}[htb]
+\centering
+%\includegraphics[width=3.5in]{rados-after-ddn-tcptune}
+\includegraphics[width=3.5in]{autotune-disabled}
+\caption{Evaluating RADOS bench with TCP auto tuning \textbf{disabled},  4 servers, 4
+clients, 4 MB I/O}
+\label{fig:rados-tcp-autotune-disabled}
+\end{figure}
+
+
+Luckily, the fix was fairly straightforward by setting system parameter
+\url{/proc/sys/net/ipv4/tcp_moderate_rcvbuf} to zero on all nodes.  With this
+change in place, We have observed this improving the performance significantly
+on Ceph read operations. As shown in
+Figure~\ref{fig:rados-tcp-autotune-disabled}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REMOVED for space
+
+\begin{comment}
+
+\begin{Verbatim}[fontsize=\small]
+ echo 0 | sudo tee 
+   /proc/sys/net/ipv4/tcp_moderate_rcvbuf
+\end{Verbatim}
+
+\end{comment}
+
+
+Recent versions of Ceph work around this issue by manually controlling the TCP
+buffer size.  
 
 \subsubsection{Scaling on number of OSDs per server}
+
+We also observed that using two or more client processes and many concurrent
+operations are important when performing these tests.  We tested eight client
+processes with 32 concurrent 4 MB objects in flight each. We created a pool
+for each RADOS Bench process to ensure that object reads come from independent
+pools (RADOS Bench is not smart enough to ensure that objects are not read by
+multiple processes and thus possibly cached).  A sync and flush is performed
+on every node before every test to ensure no data or metadata is in cache.
+All tests were run with replication set to one. 
 
 In the following test, a single Ceph host drives $n$ OSDs, where $n$ increases
 from one to eleven. The result is illustrated in Figure~\ref{fig:osd-scale}.
@@ -45,47 +103,71 @@ have not reached the saturation point yet. Additional testing would require
 provisioning more OSDs on the SFA10K backend.
 
 
-\begin{figure}[!t]
+\begin{figure}[htb]
 \centering
 \includegraphics[width=3in]{data/rados_osd}
-\caption{RADOS scaling on number of OSDs}
+\caption{RADOS scaling on number of OSDs: single server single client}
 \label{fig:osd-scale}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=3in]{data/rados_server}
-\caption{RADOS scaling on number of servers}
-\label{fig:oss-scale}
 \end{figure}
 
 \subsubsection{Scaling on number of OSD servers}
 
 In this test, we exercise OSD servers from one to four, driven by four hosts
-each with four RADOS Bench process. Each additional OSD server
-adds eleven more OSDs into play. We observe that Ceph exhibits linear scaling with
-regard to number of servers as well, at least in the given set of servers.
-However, the peak performance we are seeing is about the half of what are
-expecting from the SFA10K (compare to the baseline block I/O perforamnce number
-presented in Section~\ref{sec:block-io}).
+each with four RADOS Bench process. Each additional OSD server adds eleven
+more OSDs into play.  Figure~\ref{fig:oss-scale} summarized the results.
+Comparing to Figure~\ref{fig:rados-tcp-autotune-disabled}, the read
+performance improved about 10\% given eight clients instead of four, but write
+performance is mostly flat for reason explained below. We also observe that
+Ceph exhibits linear scaling with regard to number of servers, at least in the
+given number of servers.  However, the peak performance we are seeing is about
+the half of what are expecting from the SFA10K (compare to the baseline block
+I/O performance number presented in Section~\ref{sec:block-io}).
 
 For writes, the lost performance is attributed to the way Ceph performs
-journaling:
-Ceph does not support meta-data only journaling, therefore every write is the
-equivalent of a double-write: once to the data device, once to the journaling
-device. This effectively cuts the observed system bandwidth in half. That said,
-it does not explain the read performance -- it is a little better than write,
-but still far from the theoretical maximum.
+journaling: Ceph does not support meta-data only journaling, therefore every
+write is the equivalent of a double-write: once to the data device, once to
+the journaling device. This effectively cuts the observed system bandwidth in
+half. That said, it does not explain the read performance -- it is a little
+better than write, but still far from the theoretical maximum.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=3in]{data/rados_server}
+\caption{RADOS scaling on number of servers, with 8 clients}
+\label{fig:oss-scale}
+\end{figure}
 
 \subsection{Ceph File System Performance}
+\label{sec:ior-initial}
+
+\begin{figure*}[!t]
+
+\centerline{\subfloat[4 KB transfer size]
+{\includegraphics[width=3in]{data/ior_4k}
+\label{fig:ior4k}}
+\hfil
+\subfloat[4 MB transfer size]
+{\includegraphics[width=3in]{data/ior_4m}
+\label{fig:ior4m}}
+}% end of centerline
+\caption{CephFS scalability test with IOR}
+
+\end{figure*}
+
 
 We used the synthetic IOR benchmark
-suite\footnote{\url{http://sourceforge.net/projects/ior-sio/}} for file system
-level performance and scalability test.  The particular parameter setup is show
-in Table \ref{tbl:ior}. Each client node has 6 GB of physical memory, the block
+suite\cite{ior} for file system
+level performance and scalability test.  
+Each client node has 6 GB of physical memory, the block
 size is set so as to mitigate cache effects. In addition, the test harness
-program issues the following commands at the beginning of each test:
+program issues commands at the beginning of each test to free pagecache,
+dentries and inodes.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%   COMMENT OUT IOR parameter table 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{comment}
 
 \begin{table}[tb]
 \caption{IOR parameter setup}
@@ -118,47 +200,34 @@ program issues the following commands at the beginning of each test:
 Here, 0 is the default value of \verb!drop_caches!; 1 is to free pagecaches, 2
 is to free dentries and inodes, 3 is to free pagecache, dentries, and inodes.
 
+\end{comment}
 
-Our first round of tests was less than ideal as we encountered various issues. For
-the sake of completeness, we first summarize the results, then discuss
-further tuning efforts and improvements.
-
-The full permutation of IOR parameters were not explored due to I/O errors we encountered.
-We were, however, able to record results in two extreme cases as far as
-transfer size is concerned: 4 KB and 4 MB, using a fixed number of OSD servers
-(4) and fixed block size (8 GB), the results are illustrated in Figure
-\ref{fig:ior4k} and \ref{fig:ior4m}, we make the following observations:
-
-
-\begin{figure*}[!t]
-
-\centerline{\subfloat[4 KB transfer size]
-{\includegraphics[width=3in]{data/ior_4k}
-\label{fig:ior4k}}
-\hfil
-\subfloat[4 MB transfer size]
-{\includegraphics[width=3in]{data/ior_4m}
-\label{fig:ior4m}}
-}% end of centerline
-\caption{CephFS scalability test with IOR}
-
-\end{figure*}
+Our initial tests was less than ideal as we encountered various issues.  The
+full permutation of IOR parameters sweep were not explored due to I/O errors
+we encountered.  We were, however, able to record results in two extreme cases
+as far as transfer size is concerned: 4 KB and 4 MB, using a fixed number of
+OSD servers (4) and fixed block size (8 GB), the results are illustrated in
+Figure \ref{fig:ior4k} and \ref{fig:ior4m}, we make the following
+observations:
 
 
 \begin{itemize}
 
   \item The small read (4 KB transfer size) performance is almost an anomaly
-  -- we will investigate why it is so low compare to write performance and
-  present improved results in Section~\ref{sec:improve-ior}.
 
   \item The large read (4 MB transfer size) performance is almost half of the
   RADOS read performance.
    
   \item The write performance is also about half of what we can obtain from
   RADOS Bench. When number of clients reaches 8, there is a significant
-  performance drop as well. 
+  performance drop, which is a poor sign for scalability. 
 
 \end{itemize}
+
+The bottom line is, though we have obtained decent performance number at RADOS
+level, but it did not translate into file system-level performance. We will
+investigate why it is so low compare to write performance and present improved
+results in Section~\ref{sec:ceph-tuning}.
 
 
 \subsection{Metadata Performance Evaluation}
@@ -233,7 +302,7 @@ file creation operation, it is likely due to lack of workload stress on MDS.
 \end{itemize}
 
 
-The results also show that file creation rate is signficantly lower than
+The results also show that file creation rate is significantly lower than
 directory creation rate. We stipulated two contributing factors: one is the file
 creation is associated with 1 MB data write and followed by a fsync operation,
 which is a rather heavy weight operation compare to directory creation. Another

@@ -2,7 +2,7 @@
 
 PATH=/usr/texbin:$PATH
 #/usr/texbin/latexmk -pdflatex=lualatex -pdf $*
-/usr/texbin/latexmk -quiet -pdflatex="lualatex %O %S" -pdf -dvi- -ps- $*
+/usr/texbin/latexmk -pdflatex="lualatex %O %S" -pdf -dvi- -ps- $*
 # clean up
 rm -f *.snm
 rm -f *.nav

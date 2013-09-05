@@ -13,8 +13,8 @@ well as, other OLCF computational, analysis, and visualization clusters), OLCF
 also hosts large-scale file and storage systems. Lustre has been OLCF's choice
 as the distributed parallel file system.  The latest incarnation of such
 large-scale file systems hosted at OLCF is Spider II\cite{spider2}. Spider II
-is the forklift-upgrade of its predecessor, Spider, which was deployed in 2008.
-Spider II, deployed in 20013, is designed to operate at over 1 TB/s peak
+is the upgrade of its predecessor, Spider, which was deployed in 2008.
+Spider II, deployed in 2013, is designed to operate at over 1 TB/s peak
 aggregate I/O throughput and has a 40 PB of raw disk capacity. As the scratch
 file system connected to a leadership computing platform at the scale of Titan,
 Spider II emphasizes \textit{capability} over \textit{capacity}. However, we
@@ -24,10 +24,56 @@ interface, S3-like API, cloud solution integration) which might not be
 efficiently serviced by Lustre. OLCF is constantly evaluating new and emerging
 file and storage system technologies.  
 
-Ceph\cite{Weil:2006:Ceph} originated from Sage Weil's PhD research at UC Santa
-Cruz at 2007 and it was designed to be a reliable, scalable fault-tolerant
-parallel file system.  Since then, Ceph has been open-sourced and Inktank is
-now the major developer behind it.  In comparison to other parallel file
+Ceph\cite{Weil:2006:Ceph} is a distributed storage system designed for
+scalability, reliability, and performance.  The system is based on a
+distributed object storage service called RADOS (reliable autonomic distributed
+object store) that manages the distribution, replication, and migration of
+objects.  On top of that reliable storage abstraction Ceph builds a range of
+services, including a block storage abstraction (RBD, or rados block device)
+and a cache-coherent distributed file system (CephFS).
+
+Data objects are distributed across storage daemons (ceph-osd) using
+CRUSH\cite{Weil:2006:Crush}, a deterministic hashing function that allows
+administrators to define flexible placement policies over a hierarchical
+cluster structure (e.g., disks, hosts, racks, rows, datacenters).  Because the
+location of objects can be calculated based on the object identifier and
+cluster layout (similar to consistent hashing~\cite{karger1997consistent}),
+there is no need for a metadata index or server for the RADOS object store.
+Further, because CRUSH provides an authoritative view of data placement,
+storage daemons can coordinate directly to handle data replications, recovery,
+or object migration in the face of failure or cluster topology changes.  A
+small cluster of monitors (ceph-mon daemons) use Paxos to provide consensus on
+the current cluster layout, but do not need to explicitly coordinate migration
+or recovery activities.
+
+CephFS builds a distributed cache-coherent file system on top of the object
+storage service provided by RADOS.  Files are striped over objects stored and
+replicated by RADOS, while a separate cluster of metadata servers (ceph-mds
+daemons) manage the file system namespace and coordinate client access to
+files.  
+
+Ceph metadata servers store all metadata in RADOS object, which provides a
+shared, highly-available, and reliable storage backend.  Unlike many other
+distributed file system architectures, Ceph also embeds inodes inside
+directories in the common case, allowing entire directories to read from RADOS
+into the metadata server cache or prefetched into the client cache using a
+single request.
+
+Client hosts that mount the file system communicate with one or more metadata
+servers to traverse the namespace but perform file IO by reading and writing
+directly to RADOS objects that contain the file data.  The metadata server
+cluster monitors the temperature of cached metadata and periodically adjusts
+the distribution of the namespace across the MDS cluster by migrating
+responsibility for arbitrary subtrees of the hierarchy between a dynamic pool
+of active ceph-mds daemons.  This dynamic subtree
+partitioning~\cite{Weil:2004:dynamic} strategy is both adaptive and highly
+scalable, allowing additional metadata server daemons to be added or removed
+at any time, making it ideally suited both for large-scale workloads with
+bursty workloads or general purpose clusters whose workloads grow or contract
+over time.
+
+\begin{comment}
+In comparison to other parallel file
 systems, Ceph has a number of distinctive features:
 
 \begin{itemize}
@@ -58,17 +104,18 @@ long been integrated into Linux mainline kernel, which eases the deployment and
 out-of-box experience.
 
 \end{itemize}
+\end{comment}
 
 As interesting and feature-rich as Ceph may be,  scalability and performance
 are our top priorities due to the unique requirements our environment.  As part
-of this study, we set up a dedicated testbed within OLCF to understand and
-evaluate Ceph.  Our goal was to investigate the feasibility of using the Ceph
-for our future HPC storage deployments. This paper presents our experience,
-results, and observations.  While evaluating our results, please keep in mind
-that Ceph is still a relatively \textit{young} parallel file system and its
-code base is changing rapidly. In between releases, we often experienced
-different stability and performance outcomes.  We will try to make clear in the
-writing when such changes occurred.
+of this study, we set up a dedicated testbed within OLCF to  evaluate Ceph.
+Our goal was to investigate the feasibility of using the Ceph for future
+large-scale scientific HPC storage deployments. This paper presents our
+experience, results, and observations.  While evaluating our results, please
+keep in mind that Ceph is still a relatively \textit{young} parallel file
+system and its code base is changing rapidly. In between releases, we often
+experienced different stability and performance outcomes.  We will try to make
+clear in the writing when such changes occurred.
 
 This paper is organized as follows. Section~\ref{sec:testbed} gives an
 overview on our general test and evaluation methodology as well as testbed

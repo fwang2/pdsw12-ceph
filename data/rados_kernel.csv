@@ -1,0 +1,10 @@
+# RADOS
+# kernel 3.5 vs. 3.9
+# XFS
+# 4 MB IO
+
+kernel, mode, bw
+"Kernel 3.5", Reads, 4678
+"Kernel 3.5", Writes, 4720
+"Kernel 3.9", Reads, 8643
+"Kernel 3.9", Writes, 5284
