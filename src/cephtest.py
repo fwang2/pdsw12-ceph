@@ -344,7 +344,10 @@ def run_radosbench(out_base, ts):
                 for i in xrange(concurrent_procs):
                     out_file = '%s/output.%s' % (out_dir, i)
                     objecter_log = '%s/objecter.%s.log' % (out_dir, i)
-                    p = pdsh(clients, '%s -p rados-bench-`hostname -s`-%s %s bench %s %s %s 2> %s > %s' %
+
+                    # notice that the final out filename is composed by %s.`hostname -s`. This is because each
+                    # client node will generate multiple output files (= concurrent_procs)
+                    p = pdsh(clients, '%s -p rados-bench-`hostname -s`-%s %s bench %s %s %s 2> %s > %s.`hostname -s`' %
                             (RADOS_cmd, i, op_size_str, time, mode, concurrent_ops_str, objecter_log, out_file))
                     ps.append(p)
                 for p in ps:
