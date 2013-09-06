@@ -11,11 +11,16 @@ import sys
 from color import hprint, eprint
 
 global ceph_config, ior_config, cluster_config, mpi_config, mdtest_config, ceph_config_table
-global para_config, xfs_config, btrfs_config, ext4_config
+global para_config, xfs_config, btrfs_config, ext4_config, rados_config
 
-IOR_cmd = "/ccs/techint/home/fwang2/local/bin/IOR"
-MDTEST_cmd = "/ccs/techint/home/fwang2/local/bin/mdtest"
-INIT_cmd = "/ccs/techint/home/fwang2/local/bin/ceph-init"
+IOR_cmd         = "/ccs/techint/home/fwang2/local/bin/IOR"
+MDTEST_cmd      = "/ccs/techint/home/fwang2/local/bin/mdtest"
+INIT_cmd        = "/ccs/techint/home/fwang2/local/bin/ceph-init"
+RADOS_cmd       = "/ccs/techint/home/fwang2/local/bin/rados"
+CEPH_cmd        = "/ccs/techint/home/fwang2/local/bin/ceph"
+MKCEPHFS_cmd    = "/ccs/techint/home/fwang2/local/sbin/mkcephfs"
+MPI_cmd         = "mpirun"
+
 
 # this command requires cooporation from remote host's LD_LIBRARY_PATH
 # for example, spoon37:/root/.bashrc, I have the following:
@@ -23,14 +28,16 @@ INIT_cmd = "/ccs/techint/home/fwang2/local/bin/ceph-init"
 # export LD_LIBRARY_PATH=/ccs/techint/home/fwang2/local/lib64:/ccs/techint/home/fwang2/local/lib:$LD_LIBRARY_PATH
 # export PATH=/ccs/techint/home/fwang2/local/bin:/ccs/techint/home/fwang2/local/sbin:$PATH
 
-CEPH_cmd = "/ccs/techint/home/fwang2/local/bin/ceph"
 
-
-MKCEPHFS_cmd = "/ccs/techint/home/fwang2/local/sbin/mkcephfs"
-MPI_cmd = "mpirun"
 
 # Monitor host: spoon41
 MON_addr = "10.37.248.43:6789"
+
+def check_err(out, err):
+    if err:
+        shutdown(err)
+    else:
+        print(out)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Ceph Test Harness Program")
@@ -45,7 +52,7 @@ def parse_args():
     action.add_argument("--umount", action="store_true", help = "Umount cephfs")
     action.add_argument("--rebuild", action="store_true", help = "Setup Ceph from scratch")
     action.add_argument("--tuneup", action="store_true", help = "Tuneup parameters for Ceph cluster")
-    action.add_argument("--create", action="store_true", help = "Set up Ceph From Scratch")
+    action.add_argument("--restart", action="store_true", help = "Restart Ceph")
     action.add_argument("--reboot-clients", action="store_true", help = "Reboot Ceph clients")
     action.add_argument("--shutdown", action="store_true", help = "Shutdown Ceph")
     action.add_argument("--ior", action="store_true", help = "Run IOR tests")
@@ -137,6 +144,12 @@ def get_nodes():
     mons = cluster_config.get('mons', 'spoon41').split(",")
     return ",".join(list(set(servers + clients + mds + mons)))
 
+def get_servers_and_clients():
+    servers = cluster_config['servers'].split(",")
+    clients = cluster_config['clients'].split(",")
+    return ",".join(list(set(servers + clients)))
+
+
 def get_server_nodes():
     """
     return list of server nodes: osd server + mds + monitor
@@ -151,21 +164,23 @@ def get_server_nodes():
 
 def stop_ceph():
     hprint("Stopping ceph ...")
-    pdsh(get_server_nodes(), INIT_cmd + ' stop')
-    pdsh(get_server_nodes(), 'killall -9 ceph-osd;killall -9 ceph-mon;killall -9 ceph-mds')
+    pdsh(get_server_nodes(), INIT_cmd + ' stop').communicate()
+    pdsh(get_server_nodes(), 'killall -9 ceph-osd;killall -9 ceph-mon;killall -9 ceph-mds').communicate()
+
 
 def start_ceph():
 
     hprint("Starting up ceph through ceph-init script ...")
-    pdsh(get_server_nodes(), INIT_cmd + ' start')
+    pdsh(get_server_nodes(), INIT_cmd + ' start').communicate()
 
 def purge_logs():
 
     hprint("Delete old ceph logs")
 
-    pdsh(get_server_nodes(), 'rm -rf /chexport/users/fwang2/ceph/*.log')
+    pdsh(get_server_nodes(), 'rm -rf /chexport/users/fwang2/ceph/*.log').communicate()
+
     mons = cluster_config.get('mons', 'spoon41')
-    pdsh(mons, 'rm -rf /tmp/mon.a')
+    pdsh(mons, 'rm -rf /tmp/mon.a').communicate()
 
 def shutdown(msg):
     eprint("Fatal error, quitting now")
@@ -176,7 +191,8 @@ def setup_mds_mons():
 
     hprint("Setup MDS ...")
     mds = cluster_config['mds']
-    pdsh(mds, 'mkdir -p /var/log/ceph')
+    pdsh(mds, 'mkdir -p /var/log/ceph').communicate()
+
 
 def setup_osd_fs():
     """
@@ -197,8 +213,10 @@ def setup_osd_fs():
         config = xfs_config
     elif fs == 'btrfs':
         config = btrfs_config
-    else:
+    elif fs == "ext4":
         config = ext4_config
+    else:
+        shutdown("unkown file system %s" % fs)
 
     mkfs_opts = config.get('mkfs_opts', '-o noatime')
     mount_opts = config.get('mount_opts', '-o inode64,noatime')
@@ -230,13 +248,10 @@ def setup_osd_fs():
 def mkcephfs():
     hprint("Running mkcephfs ...")
     head = cluster_config['head']
-    pdsh(head, '%s -a -c /etc/ceph/ceph.conf' % MKCEPHFS_cmd).communicate()
-
-def check_err(out, err):
-    if err:
-        shutdown(err)
-    else:
-        print(out)
+    out, err = pdsh(head, '%s -a -c /etc/ceph/ceph.conf' % MKCEPHFS_cmd).communicate()
+    # Note: bunch of login log returned as part of the std error
+    # so can't check_err here, it will simply bail out.
+    # check_err(out, err)
 
 def setup_pools():
     hprint("Setup pools ...")
@@ -256,32 +271,109 @@ def setup_pools():
             CEPH_cmd).communicate()
     check_err(out, err)
 
-def create_ceph_rados():
+def setup_radosbench():
+    """
+    for each client, it creates "concurrent_procs" pools - this appears to be
+    very unrealistic, we need to double check on this.
+    """
+    hprint("Setup rados bench pool")
+    concurrent_procs = rados_config.get('concurrent_procs', 1)
+    clients = cluster_config['clients'].split(',')
+    head = cluster_config['head']
 
-    stop_ceph()
-
-    purge_logs()
-
-    generate_ceph_conf()
-
-    distribute_ceph_conf("ceph.conf")
-
-    setup_mds_mons()
-
-    setup_osd_fs()
-
-
-    mkcephfs()
-
-    start_ceph()
+    for i in xrange(concurrent_procs):
+        for node in clients:
+            out, err = pdsh(head, "%s osd pool create rados-bench-%s-%s 1024 1024" % (CEPH_cmd, node, i)).communicate()
+            check_err(out, err)
+            out, err = pdsh(head, "%s osd pool set rados-bench-%s-%s size 1" % (CEPH_cmd, node, i)).communicate()
+            check_err(out, err)
 
     ceph_check_health()
 
+def check_dir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+
+def run_radosbench(out_base, ts):
+    """
+    bench <seconds> write|seq|rand [-t concurrent_operations] [--no-cleanup]
+                                    default is 16 concurrent IOs and 4 MB ops
+                                    default is to clean up after write benchmark
+
+    The following command run 4MB I/O for 5 seconds, 32 concurrent IO
+
+    $ rados -p rados-bench-spoon37-0 -b 4194304 bench 5 write -t 32
+
+    Stddev Bandwidth:       154.464
+    Max bandwidth (MB/sec): 400
+    Min bandwidth (MB/sec): 0
+
+    it appears that --concurren-ios is the same as -t, whoever last overwrite the previous
+    """
+
+    hprint("Running rados bench tests...")
+    clients = cluster_config['clients']
+    rebuild_every_test = rados_config.get('rebuild_every_test', True)
+    time = str(rados_config.get('time', '360'))
+    concurrent_procs = rados_config.get('concurrent_procs', 1)
+    concurrent_ops_array = rados_config.get('concurrent_ops', [16])
+    modes = rados_config.get('modes', ['write'])
+    op_sizes = rados_config.get('op_sizes', [4194304])
+    for op_size in op_sizes:
+        for concurrent_ops in concurrent_ops_array:
+            if rebuild_every_test:
+                setup_ceph(True)
+                setup_radosbench()
+            # do tests
+            for mode in modes:
+                out_dir = '%s/radosbench/%s/op_size-%08d/concurrent_ops-%08d/%s' % (out_base, ts, int(op_size), int(concurrent_ops), mode)
+                check_dir(out_dir)
+
+                concurrent_ops_str = '--concurrent-ios %s' % concurrent_ops
+                op_size_str = '-b %s' % op_size
+
+                # drop cache
+                nodes = get_servers_and_clients()
+
+                pdsh(nodes, 'sync').communicate()
+                pdsh(nodes, 'echo 3 | tee /proc/sys/vm/drop_caches').communicate()
+
+                # run rados bench
+                ps = []
+                for i in xrange(concurrent_procs):
+                    out_file = '%s/output.%s' % (out_dir, i)
+                    objecter_log = '%s/objecter.%s.log' % (out_dir, i)
+                    p = pdsh(clients, '%s -p rados-bench-`hostname -s`-%s %s bench %s %s %s 2> %s > %s' %
+                            (RADOS_cmd, i, op_size_str, time, mode, concurrent_ops_str, objecter_log, out_file))
+                    ps.append(p)
+                for p in ps:
+                    p.wait()
+    hprint("RADOS bench done.")
+
+
+def setup_ceph(rebuild):
+    """
+    rebuild is a boolean flag, which decide if we need to scrape all mounting point,
+    logs, and re-create the backend file system
+    """
+
+    stop_ceph()
+
+    generate_ceph_conf()
+    distribute_ceph_conf("ceph.conf")
+
+    # re-create everything from scratch
+
+    if rebuild:
+        purge_logs()
+        setup_mds_mons()
+        setup_osd_fs()
+        mkcephfs()
+    start_ceph()
+    ceph_check_health()
     setup_pools()
 
-
-    hprint("Ceph filesystem has been created.")
-    hprint("Note: Ceph clients are not mounted yet, use --mount")
 
 def reboot_clients():
     clients = cluster_config['clients']
@@ -337,6 +429,7 @@ def ceph_check_health():
     while True:
         stdout,stderr = pdsh(head, '%s health' % CEPH_cmd).communicate()
         if "HEALTH_OK" in stdout:
+            hprint("Ceph Health Check Okay.")
             break
         else:
             print stdout
@@ -483,6 +576,15 @@ if __name__ == "__main__":
     xfs_config = config['xfs']
     ext4_config = config['ext4']
     btrfs_config = config['btrfs']
+    rados_config = config['rados.bench']
+
+    tmp_dir_base = '/tmp/cephtest'
+    archive_dir = cluster_config['outdir']
+
+    if not os.path.exists(archive_dir):
+        os.makedirs(archive_dir)
+
+    timestamp = time.strftime("%Y-%m%d-%H%M%S", time.localtime())
 
     if args.umount:
         ceph_umount_clients()
@@ -496,10 +598,11 @@ if __name__ == "__main__":
         ceph_check_health()
         ceph_check_osd("xfs", 4, 11)
     elif args.rebuild:
-        setup_cluster("/tmp/cephtest")
-        setup_ceph()
-    elif args.create:
-        create_ceph_rados()
+        setup_ceph(True)
+    elif args.restart:
+        setup_ceph(False)
+    elif args.rados:
+        run_radosbench(archive_dir, timestamp)
     elif args.ior:
         ior_test()
     elif args.mdtest:

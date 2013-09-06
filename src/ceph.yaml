@@ -1,7 +1,9 @@
 cluster:
     head: spoon37
-    servers: tick-oss1,tick-oss2,tick-oss3,tick-oss4
-    clients: spoon28,spoon29,spoon30,spoon31,spoon37,spoon38,spoon39,spoon40
+    #servers: tick-oss1,tick-oss2,tick-oss3,tick-oss4
+    servers: tick-oss1
+    #clients: spoon28,spoon29,spoon30,spoon31,spoon37,spoon38,spoon39,spoon40
+    clients: spoon28,spoon29
     start: 1
     mds: tick-mds1
     mons: spoon41
@@ -40,9 +42,9 @@ rados.bench:
 
   op_sizes: [4194304]
   modes: ['write','seq']
-  time: 300
+  time: 5
   concurrent_ops: [32]
-  concurrent_procs: 4
+  concurrent_procs: 2
 
 xfs:
     mkfs_opts: -f -i size=2048
