@@ -349,6 +349,23 @@ def run_radosbench(out_base, ts):
                     ps.append(p)
                 for p in ps:
                     p.wait()
+
+                # tally numbers
+                # for each sub-tests, we can name it [type of test].[timestamp].csv
+                # such as rados.2013-08-3333.csv
+                # and append the result
+                #
+                # the result can be grabbed through a shell
+                #
+                # grep "^Bandwidth" * | tr -s " " | cut -f3 -d" " | awk '{s+=$1} END {print s}'
+                #
+                # we need to put more system information and running parameters in the csv of course
+                #
+                # and this file should be placed at out_dir/rados/timestamp/xxx
+                #
+                #
+
+
     hprint("RADOS bench done.")
 
 
@@ -436,7 +453,12 @@ def ceph_check_health():
             print stderr
         time.sleep(5)
 
-def ior_test():
+def run_ior(outdir, ts):
+    """
+    outdir - output data directory
+    ts - timestamp
+    """
+
     clients = cluster_config['clients'].split(',')
     servers = cluster_config['servers'].split(',')
     idx = int(cluster_config['start'])
@@ -604,7 +626,7 @@ if __name__ == "__main__":
     elif args.rados:
         run_radosbench(archive_dir, timestamp)
     elif args.ior:
-        ior_test()
+        run_ior(archive_dir, timestamp)
     elif args.mdtest:
         mdtest()
     else:

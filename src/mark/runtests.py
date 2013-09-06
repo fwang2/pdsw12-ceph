@@ -64,8 +64,7 @@ def ORNL_sudopdsh(nodes, command):
         sudocommand += "[[ `hostname -s` = %s ]]" % node
     sudocommand += "; then %s; fi" % command
 
-    #args = ['sudo', 'pdsh', '-g', 'ceph',  sudocommand]
-    args = ['pdsh', '-g', 'ceph',  sudocommand]
+    args = ['sudo', 'pdsh', '-g', 'ceph',  sudocommand]
     print sudocommand    
     return subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
