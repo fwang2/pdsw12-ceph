@@ -86,4 +86,8 @@ in it: default.ceph.conf and runme.sh
 
     ./b2 install
 
+## Build Ceph
+
+    source ~/mgmt-env.sh
+    ./configure --prefix=/ccs/techint/home/fwang2/local --without-tcmalloc
 
