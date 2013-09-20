@@ -1,31 +1,34 @@
 \section{Observations and Conclusions}
 \label{sec:conclusion}
 
-Ceph is built on the assumption that the underlying hardware components are
-unreliable, with little or no redundancy and failure detection capability.
-This assumption is not valid for high-end HPC centers like OLCF. We have
-disabled replication for pools, haven't measured and quantified processing
-overhead, and we do not know yet if this would be significant. Investigating
-this remains as a future work. 
-
-Ceph performs \textbf{metadata + data} journaling, which is fine for host
-systems that have locally attached disks. However, this presents a problem in
-DDN SFA10K-like hardware, where the backend LUNs are exposed as block devices
-through IB over SRP protocol. The journaling write requires twice the
-bandwidth compared to Lustre-like meta data-only journaling mechanism. For
-Ceph to be viable in large-scale capability HPC environments like OLCF,
-journaling operations need further design and more engineering efforts.
-
-In our earlier tests, we experienced large performance swings during different
+%Ceph is built on the assumption that the underlying hardware components are
+%unreliable, with little or no redundancy and failure detection capability.
+%This assumption is not valid for high-end HPC centers like OLCF. We have
+%disabled replication for pools, haven't measured and quantified processing
+%overhead, and we do not know yet if this would be significant. Investigating
+%this remains as a future work. 
+In our early tests, we experienced large performance swings during different
 runs, low read performance when transfer size is small, and I/O errors tend to
 happen when system is under stress (more clients and large transfer sizes).
 However, with systematic performance engineering and development efforts, we
-have seen a steady improvement through different releases. As of now, Ceph
+have seen a steady improvement through different releases. As of now, the Ceph
 system on our testbed is able to perform close to 80\% of raw hardware
 capability at RADOS level and close to 70\% at file system level (after
-accounting for journaling overheads) . This is still no comparison to Lustre
-yet, but by no means a small feat for such a \textit{young} technology. It is,
-in fact, a very respectable level of performance. 
+accounting for journaling overheads) . 
+%This is still no comparison to Lustre
+%yet, but by no means a small feat for such a \textit{young} technology. It is,
+%in fact, a very respectable level of performance. 
+
+Ceph is built on the assumption that the underlying hardware components are
+unreliable, with little or no redundancy and failure detection capability.
+This assumption is not valid for high-end HPC centers like OLCF.
+Ceph performs \textbf{metadata + data} journaling, which is appropriate for host
+systems that have locally attached disks rather than DDN SFA10K-like hardware,
+where the backend LUNs are exposed as block devices through IB over SRP
+protocol. The journaling write requires twice the bandwidth compared to
+Lustre-like meta data-only journaling mechanism. For Ceph to be viable in
+large-scale capability HPC environments like OLCF, journaling operations need
+to support HPC storage hardware.
 
 %The current design on journaling write does present a challenge in
 %our IB-switched storage hardware. As BTRFS and other backend file system
