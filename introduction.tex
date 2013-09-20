@@ -6,20 +6,20 @@ Facility, located in the National Center for Computational Sciences at ORNL,
 which is managed by UT Battelle, LLC for the U.S. DOE (under the contract No.
 DE-AC05-00OR22725).} at Oak Ridge National Laboratory (ORNL) has a long history
 of deploying and running very-large-scale high-performance computing (HPC)
-systems\footnote{\url{http://www.top500.org/site/48553}}. The facility hosted
-the Jaguar supercomputer up until recently, which was upgraded to the Titan
-supercomputer. In order to satisfy the I/O demand of such supercomputers (as
-well as, other OLCF computational, analysis, and visualization clusters), OLCF
+systems\footnote{\url{http://www.top500.org/site/48553}}. 
+%The facility hosted
+%the Jaguar supercomputer up until recently, which was upgraded to the Titan
+%supercomputer. 
+In order to satisfy the I/O demand of such supercomputers, OLCF
 also hosts large-scale file and storage systems. Lustre has been OLCF's choice
-as the distributed parallel file system.  The latest incarnation of such
-large-scale file systems hosted at OLCF is Spider II\cite{spider2}. Spider II
-is the upgrade of its predecessor, Spider, which was deployed in 2008.
-Spider II, deployed in 2013, is designed to operate at over 1 TB/s peak
-aggregate I/O throughput and has a 40 PB of raw disk capacity. As the scratch
-file system connected to a leadership computing platform at the scale of Titan,
+as the distributed parallel file system.  The latest such
+large-scale file systems is Spider II\cite{spider2}.  Spider II, deployed in
+2013, is designed to operate at over 1 TB/s peak aggregate I/O throughput and
+has a 40 PB of raw disk capacity. As the scratch 
+file system for Titan, a leadership computing platform,
 Spider II emphasizes \textit{capability} over \textit{capacity}. However, we
-also recognize that there are a wide variety of scientific data and workloads
-with different performance and data access requirements (e.g., RESTful
+recognize that there are a wide variety of scientific data and emerging
+workloads with different performance and data access requirements (e.g., RESTful
 interface, S3-like API, cloud solution integration) which might not be
 efficiently serviced by Lustre. OLCF is constantly evaluating new and emerging
 file and storage system technologies.  
@@ -35,34 +35,34 @@ and a cache-coherent distributed file system (CephFS).
 Data objects are distributed across storage daemons (ceph-osd) using
 CRUSH\cite{Weil:2006:Crush}, a deterministic hashing function that allows
 administrators to define flexible placement policies over a hierarchical
-cluster structure (e.g., disks, hosts, racks, rows, datacenters).  Because the
+cluster structure (e.g., disks, hosts, racks, rows, datacenters).  The
 location of objects can be calculated based on the object identifier and
 cluster layout (similar to consistent hashing~\cite{karger1997consistent}),
-there is no need for a metadata index or server for the RADOS object store.
-Further, because CRUSH provides an authoritative view of data placement,
-storage daemons can coordinate directly to handle data replications, recovery,
-or object migration in the face of failure or cluster topology changes.  A
-small cluster of monitors (ceph-mon daemons) use Paxos to provide consensus on
+thus there is no need for a metadata index or server for the RADOS object store.
+%Further, because CRUSH provides an authoritative view of data placement,
+%storage daemons can coordinate directly to handle data replications, recovery,
+%or object migration in the face of failure or cluster topology changes.  
+A small cluster of monitors (ceph-mon daemons) use Paxos to provide consensus on
 the current cluster layout, but do not need to explicitly coordinate migration
 or recovery activities.
 
 CephFS builds a distributed cache-coherent file system on top of the object
-storage service provided by RADOS.  Files are striped over objects stored and
-replicated by RADOS, while a separate cluster of metadata servers (ceph-mds
+storage service provided by RADOS.  Files are striped across replicated
+storage objects, while a separate cluster of metadata servers (ceph-mds
 daemons) manage the file system namespace and coordinate client access to
 files.  
 
-Ceph metadata servers store all metadata in RADOS object, which provides a
+Ceph metadata servers store all metadata in RADOS objects, which provides a
 shared, highly-available, and reliable storage backend.  Unlike many other
 distributed file system architectures, Ceph also embeds inodes inside
 directories in the common case, allowing entire directories to read from RADOS
 into the metadata server cache or prefetched into the client cache using a
 single request.
 
-Client hosts that mount the file system communicate with one or more metadata
-servers to traverse the namespace but perform file IO by reading and writing
+Client hosts that mount the file system communicate with metadata
+servers to traverse the namespace and perform file I/O by reading and writing
 directly to RADOS objects that contain the file data.  The metadata server
-cluster monitors the temperature of cached metadata and periodically adjusts
+cluster periodically adjusts
 the distribution of the namespace across the MDS cluster by migrating
 responsibility for arbitrary subtrees of the hierarchy between a dynamic pool
 of active ceph-mds daemons.  This dynamic subtree
@@ -106,25 +106,35 @@ out-of-box experience.
 \end{itemize}
 \end{comment}
 
-As interesting and feature-rich as Ceph may be,  scalability and performance
-are our top priorities due to the unique requirements our environment.  As part
-of this study, we set up a dedicated testbed within OLCF to  evaluate Ceph.
-Our goal was to investigate the feasibility of using the Ceph for future
+While we are interested in Ceph for its ability to support
+alternative workloads that are not easily accomplished with Lustre, in this
+study we are investigating the use Ceph for future
 large-scale scientific HPC storage deployments. This paper presents our
-experience, results, and observations.  While evaluating our results, please
-keep in mind that Ceph is still a relatively \textit{young} parallel file
-system and its code base is changing rapidly. In between releases, we often
-experienced different stability and performance outcomes.  We will try to make
-clear in the writing when such changes occurred.
+experience, results, and observations in measuring the scalability and
+performance of Ceph for capability workloads.  Additionally, Ceph is under
+rapid development, and in  between releases, we often
+experienced different stability and performance outcomes.  
+%We will try to make
+%clear in the writing when such changes occurred.
+%As interesting and feature-rich as Ceph may be,  scalability and performance
+%are our top priorities due to the unique requirements our environment.  As part
+%of this study, we set up a dedicated testbed within OLCF to  evaluate Ceph.
+%Our goal was to investigate the feasibility of using the Ceph for future
+%large-scale scientific HPC storage deployments. This paper presents our
+%experience, results, and observations.  While evaluating our results, please
+%keep in mind that Ceph is still a relatively \textit{young} parallel file
+%system and its code base is changing rapidly. In between releases, we often
+%experienced different stability and performance outcomes.  We will try to make
+%clear in the writing when such changes occurred.
 
-This paper is organized as follows. Section~\ref{sec:testbed} gives an
-overview on our general test and evaluation methodology as well as testbed
-environment; Following it, Section~\ref{sec:baseline} establishes the baseline
-performance and expectations for all critical components on the data path;
-Section~\ref{sec:ceph-initial} discusses our early runs, results, and issues
-bottom up: from middle tier RADOS object layer to the file system-level and
-then meta data performance. In Section~\ref{sec:ceph-tuning} we highlight the
-investigative and tuning effort, we compare results before and after, and how
-the process eventually bring the system performance to a respectable state.
-Finally, Section~\ref{sec:conclusion} summarizes our findings, observations,
-and future works.
+%This paper is organized as follows. Section~\ref{sec:testbed} gives an
+%overview on our general test and evaluation methodology as well as testbed
+%environment; Following it, Section~\ref{sec:baseline} establishes the baseline
+%performance and expectations for all critical components on the data path;
+%Section~\ref{sec:ceph-initial} discusses our early runs, results, and issues
+%bottom up: from middle tier RADOS object layer to the file system-level and
+%then meta data performance. In Section~\ref{sec:ceph-tuning} we highlight the
+%investigative and tuning effort, we compare results before and after, and how
+%the process eventually bring the system performance to a respectable state.
+%Finally, Section~\ref{sec:conclusion} summarizes our findings, observations,
+%and future works.

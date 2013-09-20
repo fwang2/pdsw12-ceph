@@ -1,4 +1,4 @@
-\section{Establishing A Baseline Performance}
+\section{Establishing A Performance Baseline}
 \label{sec:baseline}
 
 \subsection{Block I/O over Native IB} 
@@ -6,7 +6,7 @@
 
 The lowest layer in the system are the exposed LUNs to the server hosts from
 the RAID controllers.  These LUNs are configured as a RAID 6 8+2 array (8 data
-disks and 2 \textit{P} and \textit{Q} disks). In our earlier tests we observed
+disks and 2 \textit{P} and \textit{Q} disks). In prior tests we observed
 that a 7.2K RPM SAS disk can perform at \textasciitilde140 MB/s for 128 kB
 sequential I/O requests and a 7.2K RPM SATA disk can do \textasciitilde36 MB/s.
 For these tests, all disk caches were turned off. Therefore, in 8 data disk
@@ -29,27 +29,27 @@ this translates into roughly 120 MB/s/disk and for a SAS disk group it is 175
 MB/s/disk. As can be seen, SATA RAID groups benefit from caching more than SAS
 groups. 
 
-For above tests the RAID groups are exported over physical 4x IB QDR links.
-These links can provide up to 40 Gbits/s signalling rate and 32 Gbits/s actual
-data rate (reduction is due to 8/10 encoding scheme). Therefore, each IB QDR
-link can perform at 3.2 GB/s, while in practice we see around 3 GB/s as the
-best case. 
+%For above tests the RAID groups are exported over physical 4x IB QDR links.
+%These links can provide up to 40 Gbits/s signalling rate and 32 Gbits/s actual
+%data rate (reduction is due to 8/10 encoding scheme). Therefore, each IB QDR
+%link can perform at 3.2 GB/s, while in practice we see around 3 GB/s as the
+%best case. 
 
-As mentioned earlier, we had 280 SATA disks and 200 SAS disks. Organizing these
-into RAID 6 8+2 groups will yield 28 SATA and 20 SAS RAID 6 8+2 groups. We had
-4 server hosts in our testbed and evenly distributing these on to 4 server
-hosts translates into 7 SATA LUNs and 4 SAS LUNs per server host. 
+%As mentioned earlier, we had 280 SATA disks and 200 SAS disks. Organizing these
+%into RAID 6 8+2 groups yields 28 SATA and 20 SAS RAID 6 8+2 groups. We had
+%4 server hosts in our testbed and evenly distributing these on to 4 server
+%hosts translates into 7 SATA LUNs and 4 SAS LUNs per server host. 
 
-Next, we established the baseline performance for a single server host. We
-exercised all seven SATA LUNs concurrently form a single server host at the
-block-level. This resulted in an aggregate performance of roughly 2.6 GB/s.
-Repeating the same test using only four SAS LUNs yielded around 2.8 GB/s
-aggregate performance for 1 MB sequential I/O. These two numbers will be used
-as single server host aggregate baseline performance for this study. These are
-also presented in Table~\ref{tbl:block-io-baseline}. 
+%Next, we established the baseline performance for a single server host. We
+%exercised all seven SATA LUNs concurrently form a single server host at the
+%block-level. This resulted in an aggregate performance of roughly 2.6 GB/s.
+%Repeating the same test using only four SAS LUNs yielded around 2.8 GB/s
+%aggregate performance for 1 MB sequential I/O. These two numbers will be used
+%as single server host aggregate baseline performance for this study. These are
+%also presented in Table~\ref{tbl:block-io-baseline}. 
 
 It is worth mentioning that we used our in-house developed synthetic benchmark,
-\textit{fair-lio} for all our block-level testing.  fair-lio has better
+\textit{fair-lio} for all our block-level testing.  Fair-lio has better
 sequential I/O characteristics compared to commonly used XDD benchmark and it
 is asynchronous and based on the Linux \verb!libaio! library.
 
@@ -70,7 +70,7 @@ is asynchronous and based on the Linux \verb!libaio! library.
 \end{table}
 
 When exercising all 28 SATA LUNs from all four server hosts in parallel, we
-observed an 11 GB/s aggregate performance. Same level of performance was
+observed an 11 GB/s aggregate performance. The same level of performance was
 observed using all 20 SAS LUNs from four server hosts in parallel. Comparing
 these to the advertised peak performance of 12 GB/s of the DDN SFA10K, we
 concluded that our test setup is well configured to drive the backend disk
@@ -91,9 +91,9 @@ QDR using IPoIB can transfer data at 2.7 GB/s (the hosts are tuned per
 recommendations from Mellanox). With all four server hosts (OSD servers), we
 expect the aggregate throughput to be in the neighborhood of 11 GB/s.
 
-Unfortunately there was not enough time to do more detailed analysis of the
-network performance. However, as we observed later, RADOS is performing no
-more than 8 GB/s driven by four server hosts. This confirms that we have
-provisioned enough network bandwidth. In other words, IP over IB is not a
-bottleneck in this case.
+%Unfortunately there was not enough time to do more detailed analysis of the
+%network performance. However, as we observed later, RADOS is performing no
+%more than 8 GB/s driven by four server hosts. This confirms that we have
+%provisioned enough network bandwidth. In other words, IP over IB is not a
+%bottleneck in this case.
 
