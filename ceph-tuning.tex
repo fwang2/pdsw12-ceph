@@ -200,9 +200,10 @@ installed on our test systems.\footnote{For more information,
 please refer to \url{http://lwn.net/Articles/517082/} and
 \url{https://patchwork.kernel.org/patch/1338691/}.}  We upgraded our test
 systems with kernel version 3.9 and performed RADOS Bench test.  The results
-were dramatic:  read performance improved from 4678 MB/s to 8643 MB/s (almost
-an 85\% improvement).  Write performance was also fractionally improved from
-4720 MB/s to 5284 MB/s 9an almost 12\% improvement).
+%were dramatic:  read performance improved from 4678 MB/s to 8643 MB/s (almost
+were dramatic:  read performance improved from 4678 MB/s to 7499 MB/s 
+(a 60\% improvement).  Write performance was also fractionally improved from
+4720 MB/s to 5284 MB/s (a 12\% improvement).
 %extremely positive and presented in
 %Figure~\ref{fig:rados-kernel}. As can be seen, with the 3.9 kernel, while
 %there was a slight improvement on write performance, read performance improved
@@ -233,9 +234,11 @@ an 85\% improvement).  Write performance was also fractionally improved from
 %% mention that 15 shows the filesystem performance?
 
 Additionally, we increased the size of the CephFS kernel client's read-ahead
-chance.  IOR results reflecting the read-ahead cache size change are presented
-in Figure~\ref{fig:ior-kernel-39}.
+chance.  
+%IOR results reflecting the read-ahead cache size change are presented
+%in Figure~\ref{fig:ior-kernel-39}.
 
+\begin{comment}
 \begin{figure}[htb]
 \centering
 %\includegraphics[width=3.5in]{ior-kernel-39}
@@ -244,7 +247,7 @@ in Figure~\ref{fig:ior-kernel-39}.
 size}
 \label{fig:ior-kernel-39}
 \end{figure}
-
+\end{comment}
 
 By installing a newer kernel, increasing read-ahead cache size, and increasing
 the number of client IOR processes, we were able to achieve very satisfactory
@@ -280,6 +283,7 @@ topping out anywhere from 5.6-7 GB/s, however it is unclear if read performance
 would continue scaling with more clients and get closer to ~8 GB/s we observed 
 with RADOS Bench.
 
+\begin{comment}
 \subsection{Metadata Performance Tuning}
 For brevity's sake, we are omitting most of our file and directory creation
 rate results.  However, over the course of our testing we did notice that in
@@ -298,3 +302,4 @@ substantial.
 \label{fig:mdtest-064-file-create}
 \end{figure}
 
+\end{comment}
