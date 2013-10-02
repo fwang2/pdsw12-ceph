@@ -8,16 +8,18 @@ controllers are driven by four server hosts (oss-[1-4]).  Each server host has
 two InfiniBand (IB) QDR connections to the storage backend.  We used a single
 dual-port Mellanox ConnectX IB QDR card per host.  By our calculation, this
 setup is adequate to drive the SFA10K at its maximum theoretical throughput
-(roughly 12 GB/s). Server hosts and SFA10K connection diagram is illustrated in
-Figure~\ref{fig:ddn-sfa10k}.
+(roughly 12 GB/s). 
+%Server hosts and SFA10K connection diagram is illustrated in
+%Figure~\ref{fig:ddn-sfa10k}.
 
+\begin{comment}
 \begin{figure}[htb]
 \centering
 \includegraphics[width=3in]{figs/sfa10k}
 \caption{DDN SFA10K hardware and host connection diagram}
 \label{fig:ddn-sfa10k}
 \end{figure}
-
+\end{comment}
 
 Our SFA10K system consists of 200 SAS drives and 280 SATA drives, hosted in a
 10-tray configuration. Each DDN SA4601 disk tray can host up to 60 disks and
