@@ -84,7 +84,7 @@ baseline for the entire test configuration.
 Ceph uses the BSD Sockets interface in \texttt{SOCK\_STREAM} mode (i.e., TCP).
 Because our entire testbed is built on IB QDR fabric (including client to
 server host connections over a 108-port Mellanox IB QDR switch), we used IP
-over IB (IPoIB) for networking\footnote{As of writing of this report, Inktank
+over IB (IPoIB) for networking\footnote{As of writing of this paper, Inktank
 is investigating using rsockets to improve performance with IB fabric}. Through
 simple \verb!netperf! tests, we observed that a pair of hosts connected by IB
 QDR using IPoIB can transfer data at 2.7 GB/s (the hosts are tuned per
