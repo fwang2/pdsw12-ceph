@@ -1,0 +1,14 @@
+# IOR test
+# WITH client CRC32
+# 1 process per client
+# 4 server nodes
+# 
+# This dataset is a subset of ior-8c-4MB-scaling.dat
+#
+clients, mode, bw
+"1 client", Reads, 451.99
+"1 client", Writes, 756.74
+"4 clients", Reads, 914.53
+"4 clients", Writes, 2149.25
+"6 clients", Reads, 802.97
+"6 clients", Writes, 2275.92
