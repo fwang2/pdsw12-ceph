@@ -34,20 +34,22 @@ clients, 4 MB I/O}
 \label{fig:rados-tcp-autotune}
 \end{figure}
 
-Our early testing indicated a read performace abberation.  There were periods of high performance followed by
-periods of low performance or outright stalls that could last for up to 20
-seconds at a time.  RADOS bench recorded poor read performance across
-different backend file systems, as shown in
-Figure~\ref{fig:rados-tcp-autotune}.
-
+Our early testing indicated a read performace abberation.  There were periods
+of high performance followed by periods of low performance or outright stalls
+that could last for up to 20 seconds at a time.  RADOS bench recorded poor
+read performance across different backend file systems, as shown in
+Figure~\ref{fig:rados-tcp-autotune}.\footnote{Although we conducted this
+particular experiment with three different flavors of local file system, with
+BTRFS the best performer, Inktank however doesn't think BTRFS is
+production-ready yet. So when not explicitly stated, the follow-on experiments
+use XFS by default.}
 
 We observed that outstanding operations on the clients were not being shown as
 outstanding on the OSDs.  This appeared to be similar to a problem Jim Schutt
 at Sandia National labs encountered with TCP autotuning in the Linux
-kernel\cite{Jim:tcptune}.
-TCP auto tuning enables TCP window scaling by default and automatically adjusts
-the TCP receive window for each connection based on link conditions such as
-bandwidth delay product. 
+kernel\cite{Jim:tcptune}. TCP auto tuning enables TCP window scaling by
+default and automatically adjusts the TCP receive window for each connection
+based on link conditions such as bandwidth delay product. 
 
 \begin{figure}[htb]
 \centering
@@ -112,14 +114,22 @@ provisioning more OSDs on the SFA10K backend.
 \subsubsection{Scaling OSD servers}
 
 We measured performance at the client (using RADOS bench) for one to four OSD
-servers.  Each additional OSD server adds eleven
-more OSDs into play.  Figure~\ref{fig:oss-scale} demonstrates that read
-performance improved about 10\% given eight clients instead of four, but write
-performance is mostly flat.  The lost write performance compared to a single
-OSD is attributed to Ceph journaling.  Ceph does not support meta-data only
-journaling, therefore every write is the equivalent of a double-write: once to
-the data device, once to the journaling device.  It is unclear why read
-performance is so much lower than the theoretical maximum.
+servers. Each additional OSD server adds eleven more OSDs into play. Based on
+Figure~\ref{fig:osd-scale}, the perfect scaling projects the aggregated read
+with 4 OSSs should be at 6616 MB/s and write at 5640 MB/s.
+Figure~\ref{fig:oss-scale} demonstrates that both read and write
+\textit{scales} with increasing number of OSSs, but at a loss of 13.6\% and
+16.0\% respectively. We will discuss the improvement to this result through
+parameter probing.
+
+%Figure~\ref{fig:oss-scale} demonstrates that read
+%performance improved about 10\% given eight clients instead of four, but write
+%performance is mostly flat.  The lost write performance compared to a single
+%OSD is attributed to Ceph journaling.  Ceph does not support meta-data only
+%journaling, therefore every write is the equivalent of a double-write: once to
+%the data device, once to the journaling device.  It is unclear why read
+%performance is so much lower than the theoretical maximum.
+
 %This effectively cuts the observed system bandwidth in
 %half. 
 %That said, it does not explain the read performance -- it is a little

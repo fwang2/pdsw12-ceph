@@ -265,7 +265,7 @@ I/O performance at the Ceph file system-level.
 
 As before, we ran IOR scaling tests with two cases: transfer size 4 KB and 4
 MB.  These results are illustrated in Figure~\ref{fig:ior-064}, respectively.
-As expected, we saw saw  improved read and write performance. These new read
+As expected, we saw both improved read and write performance. These new read
 and write performance are in line with observed RADOS bench performance.
 
 %% SCOTT - Can we use the same Y axis for these figures? Any comment from Inktank
@@ -279,16 +279,18 @@ and write performance are in line with observed RADOS bench performance.
 \label{fig:ior-064}
 \end{figure}
 
-Throughout our IOR testing, we observed that the average write throughput is
-lower than the maximum.  This behavior was observed during other tests as well,
-indicating that we may have periods of time where write throughput is
-temporarily degrading.  Despite these issues, performance generally seems to be
-improving with respect to increasing number of clients.  Writes seem to be
-topping out at around 5.2 GB/s (which is roughly what we would expect due to
-journalling effectively halving the write performance).  Reads seem to be
-topping out anywhere from 5.6-7 GB/s, however it is unclear if read performance
-would continue scaling with more clients and get closer to ~8 GB/s we observed 
-with RADOS Bench.
+%Throughout our IOR testing, we observed that the average write throughput is
+%lower than the maximum.  
+% This behavior was observed during other tests as well,
+%indicating that we may have periods of time where write throughput is
+%temporarily degrading.  Despite these issues, performance generally seems to be
+%improving with respect to increasing number of clients.  
+
+Writes seem to be topping out at around 5.2 GB/s (which is roughly what we
+would expect due to journaling effectively halving the write performance).
+Reads seem to be topping out anywhere from 5.6-7 GB/s, however it is unclear
+if read performance would continue scaling with more clients and get closer to
+8 GB/s we observed with RADOS Bench.
 
 \begin{comment}
 \subsection{Metadata Performance Tuning}
