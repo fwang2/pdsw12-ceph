@@ -1,39 +1,5 @@
-\section{Introduction}
-
-Oak Ridge Leadership Computing Facility (OLCF)\footnote{This research was
-supported by, and used the resources of, the Oak Ridge Leadership Computing
-Facility, located in the National Center for Computational Sciences at ORNL,
-which is managed by UT Battelle, LLC for the U.S. DOE (under the contract No.
-DE-AC05-00OR22725).} at Oak Ridge National Laboratory (ORNL) has a long history
-of deploying and running very-large-scale high-performance computing (HPC)
-systems. 
-%The facility hosted
-%the Jaguar supercomputer up until recently, which was upgraded to the Titan
-%supercomputer. 
-In order to satisfy the I/O demand of such supercomputers, OLCF
-also hosts large-scale file and storage systems. Lustre has been OLCF's choice
-as the distributed parallel file system.  
-%The latest such
-%large-scale file systems is Spider II\cite{spider2}.  Spider II, deployed in
-%2013, is designed to operate at over 1 TB/s peak aggregate I/O throughput and
-%has a 40 PB of raw disk capacity. As the scratch 
-%file system for Titan, a leadership computing platform,
-%Spider II emphasizes \textit{capability} over \textit{capacity}. 
-However, we
-recognize that there are a wide variety of scientific data and emerging
-workloads with different performance and data access requirements (e.g., RESTful
-interface, S3-like API, cloud solution integration) which might not be
-efficiently serviced by Lustre. OLCF is constantly evaluating new and emerging
-file and storage system technologies.  
-
-This paper presents our file and block I/O performance and scalability
-evaluation of Ceph for scientific high-performance computing (HPC)
-environments. Through systematic experiments and tuning efforts, we are able
-to observe Ceph performing close to 80\% of raw hardware bandwidth at object
-level and close to 70\% of at file system level.
-
-
 \section{Background}
+\label{sec:background}
 
 Ceph\cite{Weil:2006:Ceph} is a distributed storage system designed for
 scalability, reliability, and performance.  The system is based on a
@@ -43,19 +9,21 @@ objects.  On top of that reliable storage abstraction Ceph builds a range of
 services, including a block storage abstraction (RBD, or rados block device)
 and a cache-coherent distributed file system (CephFS).
 
-Data objects are distributed across storage daemons (ceph-osd) using
-CRUSH\cite{Weil:2006:Crush}, a deterministic hashing function that allows
-administrators to define flexible placement policies over a hierarchical
-cluster structure (e.g., disks, hosts, racks, rows, datacenters).  The
-location of objects can be calculated based on the object identifier and
-cluster layout (similar to consistent hashing~\cite{karger1997consistent}),
-thus there is no need for a metadata index or server for the RADOS object store.
+Data objects are distributed across Object Storage Devices (OSD), which refers
+to either physical or logical storage unit, using CRUSH\cite{Weil:2006:Crush},
+a deterministic hashing function that allows administrators to define flexible
+placement policies over a hierarchical cluster structure (e.g., disks, hosts,
+racks, rows, datacenters).  The location of objects can be calculated based on
+the object identifier and cluster layout (similar to consistent
+hashing~\cite{karger1997consistent}), thus there is no need for a metadata
+index or server for the RADOS object store.
 %Further, because CRUSH provides an authoritative view of data placement,
-%storage daemons can coordinate directly to handle data replications, recovery,
-%or object migration in the face of failure or cluster topology changes.  
-A small cluster of monitors (ceph-mon daemons) use Paxos to provide consensus on
-the current cluster layout, but do not need to explicitly coordinate migration
-or recovery activities.
+%storage daemons can coordinate directly to handle data replications,
+%recovery, or object migration in the face of failure or cluster topology
+%changes.  
+A small cluster of monitors (ceph-mon daemons) use Paxos to provide consensus
+on the current cluster layout, but do not need to explicitly coordinate
+migration or recovery activities.
 
 CephFS builds a distributed cache-coherent file system on top of the object
 storage service provided by RADOS.  Files are striped across replicated
@@ -117,14 +85,15 @@ out-of-box experience.
 \end{itemize}
 \end{comment}
 
-While we are interested in Ceph for its ability to support
-alternative workloads that are not easily accomplished with Lustre, in this
-study we are investigating the use Ceph for future
-large-scale scientific HPC storage deployments. This paper presents our
-experience, results, and observations in measuring the scalability and
-performance of Ceph for capability workloads.  Additionally, Ceph is under
-rapid development, and in  between releases, we often
-experienced different stability and performance outcomes.  
+While we are interested in Ceph for its ability to support alternative
+workloads that are not easily accomplished with Lustre, in this study we are
+investigating the use Ceph for future large-scale scientific HPC storage
+deployments. This paper presents our experience, results, and observations in
+measuring the scalability and performance of Ceph.  
+
+%Additionally, Ceph is under
+%rapid development, and in between releases, we often
+%experienced different stability and performance outcomes.  
 %We will try to make
 %clear in the writing when such changes occurred.
 %As interesting and feature-rich as Ceph may be,  scalability and performance

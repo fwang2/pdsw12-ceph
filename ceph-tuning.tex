@@ -1,36 +1,42 @@
-\section{Further Optimization and Improvements}
+\section{Further Optimization \\and Improvements}
 \label{sec:ceph-tuning}
 
 \subsection{Improving RADOS Performance}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=3.5in]{parametric}
+\includegraphics[width=3.5in]{para2}
+%\includegraphics[width=3.5in]{parametric}
 \caption{Evaluating parameter impact through sweeping test}
 \label{fig:parametric}
 \end{figure}
 
-
 After the initial test results, we tried various combinations of tweaks
-including changing the number of filestore op threads, putting all of the
+including: changing the number of filestore op threads, putting all of the
 journals on the same disks as the data, doubling the OSD count, and upgrading
 Ceph to a development version which reduces the seek overhead caused by
 \texttt{pginfo} and \texttt{pglog} updates on XFS (these enhancements are now
-included as of the Ceph Cuttlefish release, v0.61).  The two biggest
-improvements resulted from disabling CRC32c checksums and increasing the OSD
-count on the server.  With these changes, we are seeing better results.
+included as of the Ceph Cuttlefish release, v0.61).  
+
+%The two biggest
+%improvements resulted from disabling CRC32c checksums and increasing the OSD
+%count on the server.  With these changes, we are seeing better results.
 
 We swept over Ceph configuration parameters to examine how different tuning
 options affect performance on the DDN platform. The result of this parameter
 probing is illustrated in Figure~\ref{fig:parametric}. Please refer to
 Appendix E of \cite{ceph:techreport} for explanations of these probed
-parameters.
+parameters. In this figure, the default is where we started with. Reads
+benefit from increasing the \verb!osd_op_threads! (4 and 8), with 7.3\% and
+9\% improvement respectively. For writes, the substantial boost comes with
+\verb!journal_aio! true and \verb!big_bytes!, with 11.5\% and 16.3\%
+improvement respectively. Other probed parameters (not shown on this figure)
+doesn't bear tangible impacts.
 
 
-As a result of this testing, we improved performance slightly by
-increasing the size of various Ceph buffers and queues, enabling AIO journals,
-and increasing the number of OSD op threads.
-
+%As a result of this testing, we improved performance slightly by
+%increasing the size of various Ceph buffers and queues, enabling AIO journals,
+%and increasing the number of OSD op threads.
 
 \begin{comment}
 
@@ -177,8 +183,9 @@ in Figure~\ref{fig:ior-no-client-crc32}.
 \begin{figure}[htb]
 \centering
 %\includegraphics[width=3.5in]{ior-client-no-crc32}
-\includegraphics[width=3.5in]{ior_no_crc}
-\caption{IOR test with disabling client-side CRC32}
+%\includegraphics[width=3.5in]{ior_no_crc}
+\includegraphics[width=3.5in]{crc32}
+\caption{Impact of Disabling CRC32}
 \label{fig:ior-no-client-crc32}
 \end{figure}
 
@@ -234,9 +241,9 @@ were dramatic:  read performance improved from 4678 MB/s to 7499 MB/s
 %% mention that 15 shows the filesystem performance?
 
 Additionally, we increased the size of the CephFS kernel client's read-ahead
-chance.  
-%IOR results reflecting the read-ahead cache size change are presented
-%in Figure~\ref{fig:ior-kernel-39}.
+cache.  
+%IOR results reflecting the read-ahead cache size change are presented in
+%Figure~\ref{fig:ior-kernel-39}.
 
 \begin{comment}
 \begin{figure}[htb]
