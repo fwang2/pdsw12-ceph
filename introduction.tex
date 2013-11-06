@@ -30,13 +30,16 @@ This paper presents our findings on block I/O and file system performance of
 Ceph for scientific high-performance computing (HPC) environments. Through
 systematic experiments and tuning efforts, we observed that Ceph can perform
 close to 80\% of raw hardware bandwidth at object level and close to 70\% of
-at file system level. We also identified that Ceph's metadata 
-plus data journaling design is a weak spot for a typical
+at file system level. We also identified that Ceph's metadata plus data
+journaling design is a weak spot as far as our particular storage
+infrastructure is concerned.
 
-This rest of the paper is organized as follows. Section~\ref{sec:testbed} gives an
-overview on our general test and evaluation methodology as well as testbed
-environment; Following it, Section~\ref{sec:baseline} establishes the baseline
-performance and expectations for all critical components on the data path;
+This rest of the paper is organized as follows. Section~\ref{sec:background}
+provides an overview to Ceph and its architectural components;
+Section~\ref{sec:testbed} gives an overview on our general test and evaluation
+methodology as well as testbed environment; Following it,
+Section~\ref{sec:baseline} establishes the baseline performance and
+expectations for all critical components on the data path;
 Section~\ref{sec:ceph-initial} discusses our early runs, results, and issues
 bottom up: from middle tier RADOS object layer to the file system-level and
 then meta data performance. In Section~\ref{sec:ceph-tuning} we highlight the
