@@ -45,10 +45,25 @@
 \renewcommand{\bottomfraction}{0.70}
 \renewcommand{\floatpagefraction}{0.85}
 
+\usepackage{tikz}
 
 \graphicspath{{./figs/}}
 \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
 
+\title{Ceph Parallel File System Evaluation Report}
+\date{}
+\newcommand\sponsortext{%
+This research was supported by, and used the
+resources of, the Oak Ridge Leadership Computing Facility, located in the
+National Center for Computational Sciences at ORNL, which is managed by UT
+Battelle, LLC for the U.S. DOE (under the contract No. DE-AC05-00OR22725).}
+
+\newcommand\sponsornotice{%
+\begin{tikzpicture}[remember picture,overlay]
+\node[anchor=south,yshift=30pt] at (current page.south)
+{\fbox{\parbox{\dimexpr\textwidth-\fboxsep-\fboxrule\relax}{\sponsortext}}};
+\end{tikzpicture}%
+}
 
 \begin{document}
 
@@ -65,9 +80,11 @@
 \clearpage
 \pagenumbering{arabic}
 
-%\maketitle
+% \maketitle
 %\authorrunning{}
 %\titlerunning{}
+
+\sponsornotice
 
 \section{Introduction}
 
