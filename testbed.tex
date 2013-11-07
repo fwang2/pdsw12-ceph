@@ -22,13 +22,16 @@ setup is adequate to drive the SFA10K at its maximum theoretical throughput
 \end{comment}
 
 Our SFA10K system consists of 200 SAS drives and 280 SATA drives, hosted in a
-10-tray configuration. Each DDN SA4601 disk tray can host up to 60 disks and
-has two SAS links per controller (four in total). The SATA and SAS disks in our
-testbed are distributed evenly over ten SA4601 disk trays (20 SAS and 28 SATA
-disks per tray). Each SFA10K RAID controller has two RAID processors and each
-RAID processor hosts a dual-port IB QDR card. The disks are organized into RAID
-groups by the RAID processors (software RAID) and then exported to connected
-server hosts over the IB connections. Since each DDN SFA10K controller is a
+10-tray configuration.
+%Each DDN SA4601 disk tray can host up to 60 disks and
+%has two SAS links per controller (four in total). The SATA and SAS disks in our
+%testbed are distributed evenly over ten SA4601 disk trays (20 SAS and 28 SATA
+%disks per tray). 
+%Each SFA10K RAID controller has two RAID processors and each
+%RAID processor hosts a dual-port IB QDR card. The disks are organized into RAID
+%groups by the RAID processors (software RAID) and then exported to connected
+%server hosts over the IB connections. 
+Since each DDN SFA10K controller is a
 stand-alone computer system running Linux, CPU and memory affinity while
 organizing disks into RAID groups and exporting them is crucial for obtaining
 top performance out of an SFA10K system.  

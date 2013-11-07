@@ -6,20 +6,24 @@
 
 The lowest layer in the system are the exposed LUNs to the server hosts from
 the RAID controllers.  These LUNs are configured as a RAID 6 8+2 array (8 data
-disks and 2 \textit{P} and \textit{Q} disks). In prior tests we observed
-that a 7.2K RPM SAS disk can perform at 140 MB/s for 128 kB
-sequential I/O requests and a 7.2K RPM SATA disk can do 36 MB/s.
-For these tests, all disk caches were turned off. Therefore, in 8 data disk
-RAID group with 1 MB sequential I/O requests (each disks sees 128 kB chunks of
-the request) the aggregate performance is about 1.12
-GB/s for a SAS RAID group and 288 MB/s for a SATA RAID group, if
-there are no caches along the I/O path.  With the caches turned on, especially
-the write-back cache on the DDN RAID controller, we observe a significant
-performance improvement. In our day-to-day HPC operations we run our storage
+disks and 2 \textit{P} and \textit{Q} disks). 
+
+%In prior tests we observed
+%that a 7.2K RPM SAS disk can perform at 140 MB/s for 128 kB
+%sequential I/O requests and a 7.2K RPM SATA disk can do 36 MB/s.
+%For these tests, all disk caches were turned off. Therefore, in 8 data disk
+%RAID group with 1 MB sequential I/O requests (each disks sees 128 kB chunks of
+%the request) the aggregate performance is about 1.12
+%GB/s for a SAS RAID group and 288 MB/s for a SATA RAID group, if
+%there are no caches along the I/O path.  With the caches turned on, especially
+%the write-back cache on the DDN RAID controller, we observe a significant
+%performance improvement. 
+
+In our day-to-day HPC operations, we run our storage
 systems with write-back cache turned on on RAID controllers, if and only if,
 there is a method of cache-mirroring between the two active-active RAID
-controllers. With the write-back cache on we observe \textasciitilde1.4 GB/s
-per RAID 6 8+2 SAS group and  \textasciitilde955 MB/s per RAID 6 8+2 SATA
+controllers. With the write-back cache on we observe \string~1.4 GB/s
+per RAID 6 8+2 SAS group and  \string~955 MB/s per RAID 6 8+2 SATA
 group, for 1 MB sequential I/O.  These two performance numbers will be used as
 a baseline in our study and they are presented in
 Table~\ref{tbl:block-io-baseline}.  For these tests, the 8+2 RAID 6 groups are
