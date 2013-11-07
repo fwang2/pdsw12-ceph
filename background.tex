@@ -6,11 +6,11 @@ scalability, reliability, and performance.  The system is based on a
 distributed object storage service called RADOS (reliable autonomic distributed
 object store) that manages the distribution, replication, and migration of
 objects.  On top of that reliable storage abstraction Ceph builds a range of
-services, including a block storage abstraction (RBD, or rados block device)
+services, including a block storage abstraction (RBD, or Rados Block Device)
 and a cache-coherent distributed file system (CephFS).
 
 Data objects are distributed across Object Storage Devices (OSD), which refers
-to either physical or logical storage unit, using CRUSH\cite{Weil:2006:Crush},
+to either physical or logical storage units, using CRUSH\cite{Weil:2006:Crush},
 a deterministic hashing function that allows administrators to define flexible
 placement policies over a hierarchical cluster structure (e.g., disks, hosts,
 racks, rows, datacenters).  The location of objects can be calculated based on
@@ -87,9 +87,11 @@ out-of-box experience.
 
 While we are interested in Ceph for its ability to support alternative
 workloads that are not easily accomplished with Lustre, in this study we are
-investigating the use Ceph for future large-scale scientific HPC storage
-deployments. This paper presents our experience, results, and observations in
-measuring the scalability and performance of Ceph.  
+investigating the use of Ceph for future large-scale scientific HPC storage
+deployments. 
+
+%This paper presents our experience, results, and observations in
+%measuring the scalability and performance of Ceph.  
 
 %Additionally, Ceph is under
 %rapid development, and in between releases, we often
