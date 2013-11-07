@@ -30,8 +30,10 @@ Table~\ref{tbl:block-io-baseline}.  For these tests, the 8+2 RAID 6 groups are
 exported to the server hosts using SCSI RDMA Protocol (SRP) over IB protocol
 (which is the default for our normal HPC configurations). For a SATA disk group
 this translates into roughly 120 MB/s/disk and for a SAS disk group it is 175
-MB/s/disk. As can be seen, SATA RAID groups benefit from caching more than SAS
-groups. 
+MB/s/disk. 
+
+%As can be seen, SATA RAID groups benefit from caching more than SAS
+%groups. 
 
 %For above tests the RAID groups are exported over physical 4x IB QDR links.
 %These links can provide up to 40 Gbits/s signalling rate and 32 Gbits/s actual
