@@ -12,7 +12,7 @@ systems.
 %supercomputer. 
 In order to satisfy the I/O demand of such supercomputers, OLCF
 also hosts large-scale file and storage systems. Lustre has been OLCF's choice
-as the distributed parallel file system.  
+as the distributed parallel file system for scratch I/O. 
 %The latest such
 %large-scale file systems is Spider II\cite{spider2}.  Spider II, deployed in
 %2013, is designed to operate at over 1 TB/s peak aggregate I/O throughput and
@@ -20,18 +20,22 @@ as the distributed parallel file system.
 %file system for Titan, a leadership computing platform,
 %Spider II emphasizes \textit{capability} over \textit{capacity}. 
 However, we
-recognize that there are a wide variety of scientific data and emerging
+recognize that there are a wide variety of scientific 
+%data and 
+%emerging
 workloads with different performance and data access requirements (e.g., RESTful
 interface, S3-like API, cloud solution integration) which might not be
-efficiently serviced by Lustre. OLCF is constantly evaluating new and emerging
-file and storage system technologies.  
+efficiently serviced by Lustre. 
+%OLCF is constantly evaluating new and emerging
+%file and storage system technologies.  
 
-This paper presents our findings on block I/O and file system performance of
-Ceph for scientific high-performance computing (HPC) environments. Through
-systematic experiments and tuning efforts, we observed that Ceph can perform
-close to 80\% of raw hardware bandwidth at object level and close to 70\% of
-at file system level. We also identified that Ceph's metadata plus data
-journaling design is a weak spot as far as our particular storage
+%\textit{FEIYI: Are the 80\% and 70\% numbers still valid?}
+This paper presents our evaluation and findings on block I/O and file system
+performance of Ceph for scientific HPC environments. Through systematic
+experiments and tuning efforts, we observed that Ceph can perform close to
+70\% of raw hardware bandwidth at object level and about 62\% of at file
+system level. We also identified that Ceph's metadata plus data journaling
+design is currently a weak spot as far as our particular storage
 infrastructure is concerned.
 
 This rest of the paper is organized as follows. Section~\ref{sec:background}
