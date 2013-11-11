@@ -3,12 +3,11 @@
 
 We used a Data Direct Networks (DDN) SFA10K as the storage backend for this
 evaluation. SFA10K organizes disks into various RAID levels by two
-active-active RAID controllers. In our testbed, exported RAID groups (LUNs) 
-are driven by four server hosts (oss-[1-4]).  Each server host has
-two InfiniBand (IB) QDR connections to SFA10K.  We used a single
-dual-port Mellanox ConnectX IB QDR card per host.  By our calculation, this
-setup is adequate to drive the SFA10K at its maximum theoretical throughput
-(roughly 12 GB/s). 
+active-active RAID controllers. In our testbed, exported RAID groups (LUNs)
+are driven by four server hosts (oss-[1-4]).  Each server host has two
+InfiniBand (IB) QDR connections (supported by a dual-port Mellanox ConnectX IB
+card) to SFA10K. By our calculation, this setup is adequate to drive the
+SFA10K at its maximum theoretical throughput (roughly 12 GB/s). 
 %Server hosts and SFA10K connection diagram is illustrated in
 %Figure~\ref{fig:ddn-sfa10k}.
 
@@ -21,23 +20,19 @@ setup is adequate to drive the SFA10K at its maximum theoretical throughput
 \end{figure}
 \end{comment}
 
-Our SFA10K system consists of 200 SAS drives and 280 SATA drives.
-% hosted in a
-%10-tray configuration. Each DDN SA4601 disk tray can host up to 60 disks and
-%has two SAS links per controller (four in total). 
-The SATA and SAS disks in our
-testbed are distributed evenly over the SFA10K.
-%ten SA4601 disk trays (20 SAS and 28 SATA
-%disks per tray). 
-Each SFA10K controller has two RAID processors and each
-RAID processor hosts a dual-port IB QDR card. The disks are organized into RAID
-groups by the RAID processors and then exported to connected
-server hosts.
-%over the IB connections. 
-%Since each SFA10K controller is a
-%stand-alone computer system running Linux, CPU and memory affinity while
-%organizing disks into RAID groups and exporting them is crucial for obtaining
-%top performance out of an SFA10K system.  
+Our SFA10K system consists of 200 SAS drives and 280 SATA drives, hosted in a
+10-tray configuration. 
+%Each DDN SA4601 disk tray can host up to 60 disks and has two SAS links per
+%controller (four in total). 
+The SATA and SAS disks in our testbed are distributed evenly over the SFA10K.
+%ten SA4601 disk trays (20 SAS and 28 SATA disks per tray). 
+Each SFA10K controller has two RAID processors and each RAID processor hosts a
+dual-port IB QDR card. The disks are organized into RAID groups by the RAID
+processors and then exported to connected server hosts.
+%over the IB connections. Since each SFA10K controller is a stand-alone
+%computer system running Linux, CPU and memory affinity while organizing disks
+%into RAID groups and exporting them is crucial for obtaining top performance
+%out of an SFA10K system.  
 
 \begin{comment}
 Our Ceph testbed employs a collection of nodes, including the server hosts
