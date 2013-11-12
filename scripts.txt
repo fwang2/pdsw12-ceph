@@ -1,0 +1,46 @@
+
+#1
+
+My name ... 
+I am going to present our study on ...
+There are co-authors and collaborators ... some are from Inktan engineers, and
+some from ORNL HPC Operational side
+
+# 2
+
+A brief introduction on what we do: ORNL, and in particular the National
+Center for computational sciences, have been designing and operating some of
+the very large computing facilities for more than a decade.
+
+The most recent system we had are Jaguar ... and now Titan.
+
+To some extent, we are indeed a Lustre shop.
+
+That said, there are many other access requirement other than scratch I/O, and
+not all of them can be served by Lustre effectively or efficiently. So we are
+always on the lookout for other system on the horizon - Ceph is one of such,
+and it has a whole range of interesting features. The question that this study
+aim to answer is: how good it is for HPC?
+
+# 3
+
+For folks that are not familiar with Ceph, this is a 5,000 feet overview on
+what it is. Ceph is originated from Sage Weil's Ph.D research at UC Santa
+Cruz, It is built on top of a distributed object storage, RADOS - that
+is a foundational piece that provides scalability and reliability. Similar to
+other parallel file system, data is striped across storage devices, LUNs, or
+in Ceph's lingo, Object Storage Devices (OSD); Different from other system,
+Ceph is designed with clustered metadata server in mind, and metadata is
+stored as RADOS objects as well. Ceph uses deterministic hashing function so
+that each client can compute data placement without the help of centralized
+metadata index service; Ceph's client side has been integrated with Linux
+mainline kernel for a while, so it provides a little bit easier out of box
+experience.
+
+
+# 4 
+
+
+
+
+
