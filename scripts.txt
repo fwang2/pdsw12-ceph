@@ -45,12 +45,211 @@ provides a somewhat easier out of box experience.
 
 This slides is an architecture figure from Ceph's own web site, it sort of
 visually illustrate how each components are stacked together. At the bottom,
-as you can see, we have RADOS or librados layer, and on top of it, there are
+as you can see, we have RADOS or librados layer, and there are
 different services built on top of it, including RBD (distributed block
-debvice), and Ceph FS. And in this study, we are more focused on the RADOS and
+device), and Ceph FS. And in this study, we focused on the RADOS and
 CephFS components.
 
-# 5  
+# 5 testbed
+#
+
+Now I will describe the testbed: SFA10K is a high-end DDN storage system. 10K
+is newer than the system we had in Spider 1, which is SFA9900, but it is older
+than what we have in Spider 2 on titan, which is SFA12K. So all in all, it
+provides a nice playground for this evaluation.
+
+SFA10K organizes disks into various RAID groups by two active-active RAID
+controllers. Each raid controllers have two RAID processors, and each RAID
+processors drives a dual port IB QDR card. There are 200 SAS drives and 280
+SATA drives in 10 disk enclosures, they are exported as 56 RAID 6 Groups.
+
+In addition, we have 4 server hosts with IB QDR connections that drive this
+storage devices. 
+
+## 6 test methodology
+#
+
+I will describe A testing methodology we followed here: it most likely sounded
+common sense approach, but I would not be surprised that people will go about
+it very differently.
+
+The basic strategy is: first we identify all critical components in the I/O
+path. Then from bottom up, we investigate both the theoretical or advertised
+performance and observed performance, the tuning process is also bottom up,
+meaning that we first tune the bottom layer, then graduate to higher layer.
+
+Generally, we expected a certain degree of performance loss as we move up. How
+much is the loss is often an indication of how well the system is engineered
+and balanced out.
+
+So for this test environment, we have four key components: (1) block devices
+(2) backend file system, (3) storage network (4) and finally the parallel file
+system level.
+
+## 7  baseline
+#
+Now, we go over the baseline performance number:
+
+IB QDR (4x) has a theoretical 32 Gbits x (4/5, 8/10 encoding) / 8 bits = 3.2
+GB per second. We observe 3.0 GB/s, with 4 IB QDR connections, the set up is
+in line with DDN's advertised maximum,which is 12 GB/s.  
+
+Ceph uses BSD socket and doesn't support native IB, we have also tested IP
+over IB performance. Given the number we obtained later on RADOS as well as
+Ceph FS, we conclude that IP over IB is not a bottleneck here.
+
+At block level, Each LUN is a RAID 6 array - 8 data disk plus 2 parity disk.
+We have found that the write back cache has a major impact on SATA RAID groups
+than SAS groups. In our day to day HPC operation, we turn the write back cache
+on if the cache mirroring is available. Thus, we use 955MB for SATA and 1.4 GB
+for SAS as the base line number at the block level)
+
+When exercising the whole system, we observed 11 GB/s, pretty close to the
+advertised 12GB/s, and we think the limitation comes from RAID controller
+performance. So there you go, 11 GB is the baseline hardware capability.
+
+It is worth to mention that we have the option of using different backend file
+system on Ceph: Brtfs usually gives better performance than XFS or EXT4.
+However, based on the recommendation from Ceph team on production readiness,
+we did most the testing on XFS. And we evaluated XFS and its tuning as well,
+for brevity, it is not part of this presentation.
+
+%%% xfs mounted with nobarrier, noatime, and inode64 option, which has
+%%% a noticeable improvement (20%)
+
+## 8: tcp auto-tune 
+
+Now we move up into Ceph's realm: how the unifying RADOS layer perform under
+stress testing? Early on during our tests, we have observed this curious
+behavior, where system experience high performance for a while, then followed
+by a period of low and sometime outright stalls. And we have seen this across
+different backend file system. Apparently, we are not the only one who are
+seeing this. Inktank performance engineer Mark forwarded this email from Jim
+at Sandia lab. His conclusion is, this is a combined effect of number of
+servers, number of client, tcp autotuning etc, and tcp memory allowed. With
+autotuing in effect, the TCP receiving window can grow to the point that TCP
+can't send ACK packet on behave of the read threader that are not throttled.
+At that point, OSD stalls, and has to wait until that retransmission count
+exceed the threshold and reset.
+
+There are two fixes on this issue: the simplest one is disable auto-tuning
+through echo /proc. And second method as far as I know, Ceph developer now do
+manual control of the buffer window through setsocketopt(), which I think
+effectively disabling auto-tuning as well.
+
+As you can see, the disabling of tcp auto-tuning has a quite dramatic effect
+on the read performance.
+
+
+## 9 rados scaling
+#
+
+With this consistent RADOS performance in place, we begin to evaluate the
+scaling properties of RADOS. There are two aspects of the RADOS scaling that
+we care: the first one is, with a single OSD server, how many OSDs it can
+drive, and how does it scale? The second aspect is: with more than one OSD
+servers, how does it scale?
+
+The figures on this slide illustrates the two aspects. Both figures shows that
+both the number of OSDs, and number of OSD server are scaling in a linear
+fashion by and large, but with some subtleties. First, the left figure shows
+that write is flatting out at 11 OSDs, and read still have room to grow a bit.
+And it is important to have more concurrent thread and large objects for high
+performance. By more concurrent threads, we are talking about 32 or more. By
+large object, we are talking about 4MB.
+
+
+The right figures shows that how 4 OSD servers, each driving 11 OSDs scales.
+If we have perfect scaling using a baseline number from the left at 11 OSDs,
+then we would have aggregated bandwidth of 6,600 MB/s for read and 5,600 MB/s
+for write. What we are observing is 13.6% and 16.0% loss respectively. So not
+perfect scaling, but not bad either, there are room to grow.
+
+
+## 10 file system 
+#
+
+By and large, the RADOS level testing is smooth and consistent. Before I
+talked about further improvement, I will touch on the initial experience on
+file system test. Our standard file system benchmarking tool is IOR. And
+standard set of parameters we use are:  -F for file per process, -a for POSIX
+API, -C for for changing task order such that read won't from the write cache,
+-e for doing fsync() upon close(), we also chose the block size to be much
+bigger than physical memory size to mitigate the cache effect.
+
+However, our initial test results from IOR is quite miserable, to be blunt.
+This is from an early Ceph version I believe 0.48? We ran into both errors
+during long running session with IOR, and large performance swings. In the two
+extreme cases we tested on small transfer size 4K and large transfer size 4M,
+we are seeing the best performance we can get at IOR is only half of what
+RADOS can offer. I think by and large, this reflects the kind of dynamic state
+or immature state that Ceph was experiencing.
+
+
+## RAOS improvement: parameter probing
+#
+
+It would be nice to get to the bottom of why 0.48 behaves the way they do, but
+being as fast-paced as Ceph development is, we are now on a recommended 0.64.
+Apparently, this addressed the issue of extreme instability at file system
+level. RADOS performance remains largely the same, so our improvement starts
+from here. 
+
+Mark from Inktank performed a parameter probing test, which basically takes
+the default parameter setup as baseline, and tweak a whole bunch of parameter
+and see how they stack up against each other. In this figures, we listed only
+those which actually made a tangible impact: As you can see, number of current
+OSD threads and async I/O for journal writes give us from 7.3 to 16.3%
+improvement. Combined with a large read ahead cache setting suggested by Sage,
+We are seeing a moderate across-the-board improvement.
+
+%% big bytes is what they call compound setting: bunch of settings put together to 
+%% minimize the tweaking space
+
+## IOR client scaling improvement:
+#
+
+IOR scaling improvement come from two changes: 
+
+One is from tracing a high CPU utilization observed on the client side, and
+eventually the problem is traced to the CRC32 checksum code, which is
+CPU-intensive. By mounting file system without CRC check, we observe client
+scaling improvement, especially on write. Due to this discovery, Ceph has now
+improved their CRC32 check by taking advantage of Intel SSE4 instruction set,
+which provides a parallel version of crc checksum. According to Intel's white
+paper, this can provides up to 3X speed up.
+
+Another improvement comes from a profiling effort through "perf" utilities
+installed on the testbed. Inktank investigated heavy lock contention issue,
+which apparently hurt Ceph system performance on some systems. They traces the
+problem down to a bug in Linux kernel 3.5 version, which is what we are using.
+
+By having both problem addressed, we finally both RADOS stablized at 7.5GB per
+seconds (for read), and file system performance at 5.5 GB per seconds.
+
+
+## Summary
+#
+#
+
+To summarize our experience, we started out thinking given Ceph is such a new
+comer, if it can perform 50% of the raw hardware bandwidth, that would be a
+good start. And we end up with about 70% of raw hardware capability at RADOS
+level and 62% at file system level. I think this is a respectable number.
+
+Now, one issue I did not mention or highlight, why Ceph's RADOS write as well
+as file system write is not up to the level of Read. This has to do with how
+Ceph do its journaling: it adopts a "metadta plus data" journaling scheme,
+which in IB-switch storage network, are equivalent of writing data twice of
+the amount of data - so it halves the write performance, and this turn out to
+be a major issue with this our particular, but nonetheless very typical 
+setup in HPC environment.
+
+To some degree, DDN hardware is an ill-fit for Ceph: Ceph is taking care of
+reliability in software, while DDN is taking care of it in hardware. 
+
+... talk about comparing to Lustre ... maybe not fair comparison?
+
 
 
 
