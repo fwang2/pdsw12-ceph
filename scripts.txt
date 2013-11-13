@@ -22,23 +22,35 @@ always on the lookout for other system on the horizon - Ceph is one of such,
 and it has a whole range of interesting features. The question that this study
 aim to answer is: how good it is for HPC?
 
-# 3
 
-For folks that are not familiar with Ceph, this is a 5,000 feet overview on
-what it is. Ceph is originated from Sage Weil's Ph.D research at UC Santa
-Cruz, It is built on top of a distributed object storage, RADOS - that
+# 3 & 4  (Ceph overview)
+
+For folks that are not familiar with Ceph, this is a 5,000 foot overview on
+what it is.
+
+Ceph is originated from Sage Weil's Ph.D research at UC Santa
+Cruz, It is built on top of a distributed object service, RADOS - that
 is a foundational piece that provides scalability and reliability. Similar to
 other parallel file system, data is striped across storage devices, LUNs, or
 in Ceph's lingo, Object Storage Devices (OSD); Different from other system,
-Ceph is designed with clustered metadata server in mind, and metadata is
-stored as RADOS objects as well. Ceph uses deterministic hashing function so
-that each client can compute data placement without the help of centralized
-metadata index service; Ceph's client side has been integrated with Linux
-mainline kernel for a while, so it provides a little bit easier out of box
-experience.
+Ceph is designed with clustered metadata servers in mind, and metadata is
+stored as RADOS objects as well. So RADOS is truly unifying layer underneath.
 
+Ceph uses deterministic hashing function so that each client can compute data
+placement without the help of centralized metadata index service; Ceph's
+client side has been integrated with Linux mainline kernel for a while, so it
+provides a somewhat easier out of box experience.
 
-# 4 
+###
+
+This slides is an architecture figure from Ceph's own web site, it sort of
+visually illustrate how each components are stacked together. At the bottom,
+as you can see, we have RADOS or librados layer, and on top of it, there are
+different services built on top of it, including RBD (distributed block
+debvice), and Ceph FS. And in this study, we are more focused on the RADOS and
+CephFS components.
+
+# 5  
 
 
 
