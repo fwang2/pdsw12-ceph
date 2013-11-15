@@ -1,26 +1,37 @@
+%%%
+the latest edition is in Google docs now.
+%%%
+
 
 #1
 
-My name ... 
-I am going to present our study on ...
-There are co-authors and collaborators ... some are from Inktan engineers, and
-some from ORNL HPC Operational side
+My name is xxx and I am going to present our study on ... 
+
+This is a collaborative efforts between ORNL tech integration group, and
+Inktank, and also HPC operation side of the folks.
+
 
 # 2
 
-A brief introduction on what we do: ORNL, and in particular the National
-Center for computational sciences, have been designing and operating some of
-the very large computing facilities for more than a decade.
+First, A brief introduction on what we do: the National Center for
+computational sciences, have been designing and operating some of the largest
+computing facilities for more than a decade. Technology integration group in
+particular, is responsible for new file and storage technology evaluation that
+the leadership facility anticipates in the future. This means we often inserts
+ourselves into vendor's development cycle, we design, configure and deploy,
+and tune file and storage system to the production stage then hand it over the
+to HPC operations.
 
-The most recent system we had are Jaguar ... and now Titan.
+Some of the well-known system including Spider 1 that goes with Jaguar computer. 
 
-To some extent, we are indeed a Lustre shop.
+Both Spider 1 and 2 are Lustre-based technology, To some extent, we are indeed
+a Lustre shop.
 
-That said, there are many other access requirement other than scratch I/O, and
-not all of them can be served by Lustre effectively or efficiently. So we are
-always on the lookout for other system on the horizon - Ceph is one of such,
-and it has a whole range of interesting features. The question that this study
-aim to answer is: how good it is for HPC?
+That said, there are "diverse HPC workload and access requirement" other than
+scratch I/O, and not all of them can be served by Lustre effectively or
+efficiently. So we are always on the lookout for other system on the horizon -
+Ceph is one of such, and it has a whole range of interesting features. The
+question that this study aim to answer is: how good it is for HPC?
 
 
 # 3 & 4  (Ceph overview)
